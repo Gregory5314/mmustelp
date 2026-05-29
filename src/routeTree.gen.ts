@@ -14,6 +14,7 @@ import { Route as OfficialsRouteImport } from './routes/officials'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as MembersRouteImport } from './routes/members'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as FinanceRouteImport } from './routes/finance'
 import { Route as ComplaintRouteImport } from './routes/complaint'
@@ -44,6 +45,11 @@ const MoreRoute = MoreRouteImport.update({
 const MembersRoute = MembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LinksRoute = LinksRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/complaint': typeof ComplaintRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByTo {
   '/complaint': typeof ComplaintRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/complaint': typeof ComplaintRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/finance'
     | '/links'
+    | '/login'
     | '/members'
     | '/more'
     | '/notifications'
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/finance'
     | '/links'
+    | '/login'
     | '/members'
     | '/more'
     | '/notifications'
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/finance'
     | '/links'
+    | '/login'
     | '/members'
     | '/more'
     | '/notifications'
@@ -165,6 +177,7 @@ export interface RootRouteChildren {
   ComplaintRoute: typeof ComplaintRoute
   FinanceRoute: typeof FinanceRoute
   LinksRoute: typeof LinksRoute
+  LoginRoute: typeof LoginRoute
   MembersRoute: typeof MembersRoute
   MoreRoute: typeof MoreRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -207,6 +220,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/members'
       preLoaderRoute: typeof MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/links': {
@@ -271,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComplaintRoute: ComplaintRoute,
   FinanceRoute: FinanceRoute,
   LinksRoute: LinksRoute,
+  LoginRoute: LoginRoute,
   MembersRoute: MembersRoute,
   MoreRoute: MoreRoute,
   NotificationsRoute: NotificationsRoute,
@@ -280,3 +301,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
