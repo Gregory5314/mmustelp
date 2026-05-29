@@ -8,7 +8,7 @@ export const Route = createFileRoute("/links")({
 });
 
 const links = [
-  { label: "Equity Taleo", href: "https://equitybank.taleo.net" },
+  { label: "Equity Taleo", href: "https://equitybank.taleo.net/careersection/ext_new/jobsearch.ftl" },
   { label: "MMUST Official Site", href: "https://www.mmust.ac.ke" },
   { label: "Equity Group Foundation", href: "https://equitygroupfoundation.com" },
   { label: "Chapter Activities", to: "/activities" as const },
