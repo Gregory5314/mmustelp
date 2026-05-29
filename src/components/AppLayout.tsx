@@ -18,9 +18,9 @@ const menuItems = [
 
 const bottomNav = [
   { icon: Home, label: "Dashboard", to: "/" as const },
-  { icon: Link2, label: "Links", to: "/activities" as const },
-  { icon: Bell, label: "Notify", to: "/complaint" as const, badge: true },
-  { icon: MoreHorizontal, label: "More", to: "/profile" as const },
+  { icon: Link2, label: "Links", to: "/links" as const },
+  { icon: Bell, label: "Notify", to: "/notifications" as const, badge: true },
+  { icon: MoreHorizontal, label: "More", to: "/more" as const },
 ];
 
 export function AppLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
