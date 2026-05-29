@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { ChevronRight, CalendarDays } from "lucide-react";
+import { ChevronRight, CalendarDays, Pencil } from "lucide-react";
 import avatar from "@/assets/member-avatar.jpg";
+import { useEffect, useState } from "react";
+import { loadProfile, defaultProfile, type Profile } from "@/lib/profile-store";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -10,17 +12,8 @@ export const Route = createFileRoute("/profile")({
       { name: "description", content: "Member profile and personal information." },
     ],
   }),
-  component: Profile,
+  component: ProfilePage,
 });
-
-const personal = [
-  { label: "SCHOLAR CODE", value: "011/6857/2019" },
-  { label: "COURSE", value: "B.Sc. Electrical Engineering, Year 3" },
-  { label: "PHONE NUMBER", value: "254 799 221 5087" },
-  { label: "EMAIL ADDRESS", value: "gomar@gmail.com" },
-  { label: "NATIONAL ID", value: "30572821" },
-  { label: "MENTORING SCHOOL", value: "ST. LUKE'S HIGH SCHOOL" },
-];
 
 const events = [
   { name: "Leadership Workshop", date: "March 25, 2026" },
@@ -29,30 +22,45 @@ const events = [
   { name: "Community Outreach", date: "December 12, 2025" },
 ];
 
-function Profile() {
+function ProfilePage() {
+  const [p, setP] = useState<Profile>(defaultProfile);
+  useEffect(() => { setP(loadProfile()); }, []);
+
+  const personal = [
+    { label: "SCHOLAR CODE", value: p.scholarCode },
+    { label: "COURSE", value: p.course },
+    { label: "PHONE NUMBER", value: p.phone },
+    { label: "EMAIL ADDRESS", value: p.email },
+    { label: "NATIONAL ID", value: p.nationalId },
+    { label: "MENTORING SCHOOL", value: p.mentoringSchool },
+  ];
+
   return (
     <AppLayout title="Member Profile" subtitle="Explore career opportunities below.">
       <section className="px-4 mt-4">
         <div className="bg-card rounded-2xl shadow-sm border border-border p-4 flex gap-4 items-center">
-          <img src={avatar} alt="Gregory Omar" width={96} height={96}
+          <img src={avatar} alt={p.fullName} width={96} height={96}
                className="h-24 w-24 rounded-xl object-cover" />
           <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-extrabold text-[var(--brand)] leading-tight">Gregory Omar</h3>
-            <p className="text-sm text-muted-foreground mt-0.5">011/6857/2019</p>
-            <button className="mt-3 inline-flex items-center gap-1.5 bg-[var(--brand)] text-brand-foreground text-sm font-semibold px-4 py-2 rounded-lg shadow hover:bg-[var(--brand-deep)] transition-colors">
-              View Profile <ChevronRight className="h-4 w-4" />
-            </button>
+            <h3 className="text-xl font-extrabold text-[var(--brand)] leading-tight">{p.fullName}</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">{p.scholarCode}</p>
+            <Link to="/profile/edit" className="mt-3 inline-flex items-center gap-1.5 bg-[var(--brand)] text-brand-foreground text-sm font-semibold px-4 py-2 rounded-lg shadow hover:bg-[var(--brand-deep)] transition-colors">
+              <Pencil className="h-4 w-4" /> Edit Profile <ChevronRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
       </section>
 
       <section className="px-4 mt-6">
-        <h4 className="text-base font-extrabold text-[var(--brand)] mb-2">Personal Information</h4>
+        <div className="flex items-center justify-between mb-2">
+          <h4 className="text-base font-extrabold text-[var(--brand)]">Personal Information</h4>
+          <Link to="/profile/edit" className="text-xs font-bold text-[var(--brand-accent)]">Edit</Link>
+        </div>
         <div className="grid grid-cols-2 gap-2.5">
-          {personal.map((p) => (
-            <div key={p.label} className="bg-card border border-border rounded-lg px-3 py-2.5">
-              <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">{p.label}</p>
-              <p className="text-sm font-bold text-foreground leading-snug mt-0.5">{p.value}</p>
+          {personal.map((f) => (
+            <div key={f.label} className="bg-card border border-border rounded-lg px-3 py-2.5">
+              <p className="text-[10px] font-semibold tracking-wider text-muted-foreground">{f.label}</p>
+              <p className="text-sm font-bold text-foreground leading-snug mt-0.5 break-words">{f.value}</p>
             </div>
           ))}
         </div>
