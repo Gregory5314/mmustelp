@@ -1,10 +1,12 @@
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Menu, X, Home, User, CheckSquare, BarChart3, Users, Shield,
-  AlertTriangle, Link2, Bell, MoreHorizontal,
+  AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
 } from "lucide-react";
 import logo from "@/assets/elp-logo.png";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
   { icon: Home, label: "Dashboard", to: "/" as const },
@@ -26,6 +28,28 @@ const bottomNav = [
 export function AppLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, isLoading, isAdmin, signOut } = useAuth();
+  const [memberCount, setMemberCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!isLoading && !user) navigate({ to: "/login", replace: true });
+  }, [user, isLoading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("id", { count: "exact", head: true })
+      .then(({ count }) => setMemberCount(count ?? 0));
+  }, [user]);
+
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -39,7 +63,7 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
           </div>
           <div className="flex items-center gap-1.5 text-sm font-semibold">
             <User className="h-4 w-4" />
-            <span>82 Members</span>
+            <span>{memberCount ?? "—"} Members</span>
           </div>
         </div>
       </header>
@@ -79,7 +103,23 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
                   <span className="font-bold text-base">{label}</span>
                 </button>
               ))}
+              {isAdmin && (
+                <button
+                  onClick={() => { setMenuOpen(false); navigate({ to: "/admin/members" }); }}
+                  className="w-full flex items-center gap-4 px-4 py-3.5 rounded-lg hover:bg-white/10 transition-colors text-left"
+                >
+                  <UserPlus className="h-5 w-5" />
+                  <span className="font-bold text-base">Manage Members</span>
+                </button>
+              )}
               <div className="border-t border-white/15 my-2" />
+              <button
+                onClick={async () => { await signOut(); setMenuOpen(false); navigate({ to: "/login" }); }}
+                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-lg hover:bg-white/10 transition-colors text-left"
+              >
+                <LogOut className="h-5 w-5" />
+                <span className="font-bold text-base">Sign Out</span>
+              </button>
               <button onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-4 px-4 py-3.5 rounded-lg hover:bg-white/10 transition-colors">
                 <X className="h-5 w-5" />
                 <span className="font-bold text-base">Close</span>

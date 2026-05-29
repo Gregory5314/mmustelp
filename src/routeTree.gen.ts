@@ -14,12 +14,14 @@ import { Route as OfficialsRouteImport } from './routes/officials'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MoreRouteImport } from './routes/more'
 import { Route as MembersRouteImport } from './routes/members'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as FinanceRouteImport } from './routes/finance'
 import { Route as ComplaintRouteImport } from './routes/complaint'
 import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileEditRouteImport } from './routes/profile.edit'
+import { Route as AdminMembersRouteImport } from './routes/admin.members'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -44,6 +46,11 @@ const MoreRoute = MoreRouteImport.update({
 const MembersRoute = MembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LinksRoute = LinksRouteImport.update({
@@ -76,6 +83,11 @@ const ProfileEditRoute = ProfileEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => ProfileRoute,
 } as any)
+const AdminMembersRoute = AdminMembersRouteImport.update({
+  id: '/admin/members',
+  path: '/admin/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -83,11 +95,13 @@ export interface FileRoutesByFullPath {
   '/complaint': typeof ComplaintRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRoutesByTo {
@@ -96,11 +110,13 @@ export interface FileRoutesByTo {
   '/complaint': typeof ComplaintRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRoutesById {
@@ -110,11 +126,13 @@ export interface FileRoutesById {
   '/complaint': typeof ComplaintRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
+  '/login': typeof LoginRoute
   '/members': typeof MembersRoute
   '/more': typeof MoreRoute
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRouteTypes {
@@ -125,11 +143,13 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/finance'
     | '/links'
+    | '/login'
     | '/members'
     | '/more'
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/members'
     | '/profile/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -138,11 +158,13 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/finance'
     | '/links'
+    | '/login'
     | '/members'
     | '/more'
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/members'
     | '/profile/edit'
   id:
     | '__root__'
@@ -151,11 +173,13 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/finance'
     | '/links'
+    | '/login'
     | '/members'
     | '/more'
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/members'
     | '/profile/edit'
   fileRoutesById: FileRoutesById
 }
@@ -165,11 +189,13 @@ export interface RootRouteChildren {
   ComplaintRoute: typeof ComplaintRoute
   FinanceRoute: typeof FinanceRoute
   LinksRoute: typeof LinksRoute
+  LoginRoute: typeof LoginRoute
   MembersRoute: typeof MembersRoute
   MoreRoute: typeof MoreRoute
   NotificationsRoute: typeof NotificationsRoute
   OfficialsRoute: typeof OfficialsRoute
   ProfileRoute: typeof ProfileRouteWithChildren
+  AdminMembersRoute: typeof AdminMembersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -207,6 +233,13 @@ declare module '@tanstack/react-router' {
       path: '/members'
       fullPath: '/members'
       preLoaderRoute: typeof MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/links': {
@@ -251,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileEditRouteImport
       parentRoute: typeof ProfileRoute
     }
+    '/admin/members': {
+      id: '/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AdminMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -271,11 +311,13 @@ const rootRouteChildren: RootRouteChildren = {
   ComplaintRoute: ComplaintRoute,
   FinanceRoute: FinanceRoute,
   LinksRoute: LinksRoute,
+  LoginRoute: LoginRoute,
   MembersRoute: MembersRoute,
   MoreRoute: MoreRoute,
   NotificationsRoute: NotificationsRoute,
   OfficialsRoute: OfficialsRoute,
   ProfileRoute: ProfileRouteWithChildren,
+  AdminMembersRoute: AdminMembersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
