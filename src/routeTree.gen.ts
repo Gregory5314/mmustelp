@@ -21,6 +21,7 @@ import { Route as ComplaintRouteImport } from './routes/complaint'
 import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileEditRouteImport } from './routes/profile.edit'
+import { Route as AdminMembersRouteImport } from './routes/admin.members'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -82,6 +83,11 @@ const ProfileEditRoute = ProfileEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => ProfileRoute,
 } as any)
+const AdminMembersRoute = AdminMembersRouteImport.update({
+  id: '/admin/members',
+  path: '/admin/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRoutesByTo {
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRoutesById {
@@ -124,6 +132,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRouteTypes {
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/members'
     | '/profile/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/members'
     | '/profile/edit'
   id:
     | '__root__'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/members'
     | '/profile/edit'
   fileRoutesById: FileRoutesById
 }
@@ -183,6 +195,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OfficialsRoute: typeof OfficialsRoute
   ProfileRoute: typeof ProfileRouteWithChildren
+  AdminMembersRoute: typeof AdminMembersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -271,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileEditRouteImport
       parentRoute: typeof ProfileRoute
     }
+    '/admin/members': {
+      id: '/admin/members'
+      path: '/admin/members'
+      fullPath: '/admin/members'
+      preLoaderRoute: typeof AdminMembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -297,7 +317,18 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OfficialsRoute: OfficialsRoute,
   ProfileRoute: ProfileRouteWithChildren,
+  AdminMembersRoute: AdminMembersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
