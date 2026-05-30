@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      complaints: {
+        Row: {
+          category: string
+          created_at: string
+          details: string
+          id: string
+          read_at: string | null
+          status: string
+          subject: string
+          submitter_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          details: string
+          id?: string
+          read_at?: string | null
+          status?: string
+          subject: string
+          submitter_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          details?: string
+          id?: string
+          read_at?: string | null
+          status?: string
+          subject?: string
+          submitter_id?: string
+        }
+        Relationships: []
+      }
       events_attended: {
         Row: {
           created_at: string
