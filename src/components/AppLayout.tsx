@@ -134,7 +134,7 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
                   <div className="border-t border-white/15 my-2" />
                   <p className="px-4 py-1 text-[10px] font-bold tracking-wider opacity-70">ADMIN TOOLS</p>
                   {visibleAdminMenu.map(({ icon: Icon, label, to }) => (
-                    <button key={label} onClick={() => { setMenuOpen(false); navigate({ to }); }}
+                    <button key={label} onClick={() => { setMenuOpen(false); navigate({ to: to as string }); }}
                       className="w-full flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10 text-left">
                       <Icon className="h-5 w-5" />
                       <span className="font-bold text-sm">{label}</span>
