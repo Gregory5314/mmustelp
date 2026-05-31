@@ -22,6 +22,7 @@ import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileEditRouteImport } from './routes/profile.edit'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
+import { Route as AdminEventsRouteImport } from './routes/admin.events'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -88,6 +89,11 @@ const AdminMembersRoute = AdminMembersRouteImport.update({
   path: '/admin/members',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminEventsRoute = AdminEventsRouteImport.update({
+  id: '/admin/events',
+  path: '/admin/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/events': typeof AdminEventsRoute
   '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/events': typeof AdminEventsRoute
   '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/events': typeof AdminEventsRoute
   '/admin/members': typeof AdminMembersRoute
   '/profile/edit': typeof ProfileEditRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/events'
     | '/admin/members'
     | '/profile/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/events'
     | '/admin/members'
     | '/profile/edit'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/events'
     | '/admin/members'
     | '/profile/edit'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OfficialsRoute: typeof OfficialsRoute
   ProfileRoute: typeof ProfileRouteWithChildren
+  AdminEventsRoute: typeof AdminEventsRoute
   AdminMembersRoute: typeof AdminMembersRoute
 }
 
@@ -291,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMembersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/events': {
+      id: '/admin/events'
+      path: '/admin/events'
+      fullPath: '/admin/events'
+      preLoaderRoute: typeof AdminEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -317,6 +337,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OfficialsRoute: OfficialsRoute,
   ProfileRoute: ProfileRouteWithChildren,
+  AdminEventsRoute: AdminEventsRoute,
   AdminMembersRoute: AdminMembersRoute,
 }
 export const routeTree = rootRouteImport

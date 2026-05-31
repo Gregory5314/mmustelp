@@ -94,7 +94,7 @@ function Page() {
   );
 }
 
-function Input({ label, value, onChange, required, type = "text" }: any) {
+function Input({ label, value, onChange, required, type = "text" }: { label: string; value: string; onChange: (v: string) => void; required?: boolean; type?: string }) {
   return (
     <div>
       <label className="text-[10px] font-bold tracking-wider text-muted-foreground">{label}</label>
@@ -103,7 +103,7 @@ function Input({ label, value, onChange, required, type = "text" }: any) {
     </div>
   );
 }
-function TextArea({ label, value, onChange }: any) {
+function TextArea({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="text-[10px] font-bold tracking-wider text-muted-foreground">{label}</label>
