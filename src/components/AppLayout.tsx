@@ -123,7 +123,7 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
           <aside className="fixed top-0 left-0 bottom-0 w-72 bg-[var(--brand-deep)] text-brand-foreground z-50 p-2 rounded-r-2xl shadow-2xl animate-in slide-in-from-left overflow-y-auto">
             <nav className="mt-2">
               {memberMenu.map(({ icon: Icon, label, to }) => (
-                <button key={label} onClick={() => { setMenuOpen(false); navigate({ to }); }}
+                <button key={label} onClick={() => { setMenuOpen(false); navigate({ to: to as string }); }}
                   className="w-full flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10 text-left">
                   <Icon className="h-5 w-5" />
                   <span className="font-bold text-sm">{label}</span>
