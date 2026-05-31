@@ -3,19 +3,35 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Menu, X, Home, User, CheckSquare, BarChart3, Users, Shield,
   AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
+  Calendar, FileText, DollarSign, GraduationCap, Heart, Settings,
 } from "lucide-react";
 import logo from "@/assets/elp-logo.png";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
 
-const menuItems = [
-  { icon: Home, label: "Dashboard", to: "/" as const },
-  { icon: User, label: "My Profile", to: "/profile" as const },
-  { icon: CheckSquare, label: "Chapter Activities", to: "/activities" as const },
-  { icon: BarChart3, label: "Finance Overview", to: "/finance" as const },
-  { icon: Users, label: "Members List", to: "/members" as const },
-  { icon: Shield, label: "Chapter Officials", to: "/officials" as const },
-  { icon: AlertTriangle, label: "Report Complaint", to: "/complaint" as const },
+type MenuItem = { icon: any; label: string; to: string; perm?: string | string[] };
+
+const memberMenu: MenuItem[] = [
+  { icon: Home, label: "Dashboard", to: "/" },
+  { icon: User, label: "My Profile", to: "/profile" },
+  { icon: CheckSquare, label: "Chapter Activities", to: "/activities" },
+  { icon: BarChart3, label: "Finance Overview", to: "/finance" },
+  { icon: Users, label: "Members List", to: "/members" },
+  { icon: Shield, label: "Chapter Officials", to: "/officials" },
+  { icon: AlertTriangle, label: "Report Complaint", to: "/complaint" },
+];
+
+const adminMenu: MenuItem[] = [
+  { icon: UserPlus, label: "Manage Members", to: "/admin/members", perm: ["admins.manage", "members.add.any", "members.add.y1", "members.add.y2", "members.add.y3", "members.add.y4"] },
+  { icon: Calendar, label: "Manage Events", to: "/admin/events", perm: "events.update" },
+  { icon: DollarSign, label: "Financial Reports", to: "/admin/finance", perm: "finance.upload" },
+  { icon: FileText, label: "Meeting Reports", to: "/admin/meetings", perm: "meetings.upload" },
+  { icon: CheckSquare, label: "Subscriptions", to: "/admin/subscriptions", perm: "subscriptions.update" },
+  { icon: GraduationCap, label: "Alumni", to: "/admin/alumni", perm: "alumni.manage" },
+  { icon: Heart, label: "Mentorship", to: "/admin/mentorship", perm: "mentorship.update" },
+  { icon: AlertTriangle, label: "Complaints", to: "/admin/complaints", perm: "complaints.view" },
+  { icon: Settings, label: "Chapter Profile", to: "/admin/chapter", perm: "profile.chapter.edit" },
 ];
 
 const bottomNav = [
@@ -28,8 +44,10 @@ const bottomNav = [
 export function AppLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user, isLoading, isAdmin, signOut } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
+  const { has, hasAny } = usePermissions();
   const [memberCount, setMemberCount] = useState<number | null>(null);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
 
   useEffect(() => {
     if (!isLoading && !user) navigate({ to: "/login", replace: true });
@@ -37,11 +55,29 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("id", { count: "exact", head: true })
+    supabase.from("profiles").select("id", { count: "exact", head: true })
       .then(({ count }) => setMemberCount(count ?? 0));
+
+    const loadUnread = () => {
+      supabase.from("notifications").select("id", { count: "exact", head: true })
+        .eq("recipient_id", user.id).is("read_at", null)
+        .then(({ count }) => setUnreadCount(count ?? 0));
+    };
+    loadUnread();
+
+    const channel = supabase.channel(`notif-${user.id}`)
+      .on("postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter: `recipient_id=eq.${user.id}` },
+        loadUnread)
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
+
+  const visibleAdminMenu = adminMenu.filter((m) => {
+    if (!m.perm) return true;
+    const perms = Array.isArray(m.perm) ? m.perm : [m.perm];
+    return hasAny(perms);
+  });
 
   if (isLoading || !user) {
     return (
@@ -70,20 +106,13 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
 
       <div className="px-4 pt-4">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setMenuOpen(true)}
-            aria-label="Open menu"
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-accent"
-          >
+          <button onClick={() => setMenuOpen(true)} aria-label="Open menu"
+            className="p-1.5 -ml-1.5 rounded-md hover:bg-accent">
             <Menu className="h-6 w-6 text-foreground" />
           </button>
-          <h2 className="flex-1 text-center text-2xl font-extrabold text-[var(--brand)] -ml-6">
-            {title}
-          </h2>
+          <h2 className="flex-1 text-center text-2xl font-extrabold text-[var(--brand)] -ml-6">{title}</h2>
         </div>
-        {subtitle && (
-          <p className="text-center text-sm text-muted-foreground mt-1">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-center text-sm text-muted-foreground mt-1">{subtitle}</p>}
       </div>
 
       <main>{children}</main>
@@ -91,38 +120,37 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
       {menuOpen && (
         <>
           <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setMenuOpen(false)} />
-          <aside className="fixed top-0 left-0 bottom-0 w-72 bg-[var(--brand-deep)] text-brand-foreground z-50 p-2 rounded-r-2xl shadow-2xl animate-in slide-in-from-left">
+          <aside className="fixed top-0 left-0 bottom-0 w-72 bg-[var(--brand-deep)] text-brand-foreground z-50 p-2 rounded-r-2xl shadow-2xl animate-in slide-in-from-left overflow-y-auto">
             <nav className="mt-2">
-              {menuItems.map(({ icon: Icon, label, to }) => (
-                <button
-                  key={label}
-                  onClick={() => { setMenuOpen(false); navigate({ to }); }}
-                  className="w-full flex items-center gap-4 px-4 py-3.5 rounded-lg hover:bg-white/10 transition-colors text-left"
-                >
+              {memberMenu.map(({ icon: Icon, label, to }) => (
+                <button key={label} onClick={() => { setMenuOpen(false); navigate({ to }); }}
+                  className="w-full flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10 text-left">
                   <Icon className="h-5 w-5" />
-                  <span className="font-bold text-base">{label}</span>
+                  <span className="font-bold text-sm">{label}</span>
                 </button>
               ))}
-              {isAdmin && (
-                <button
-                  onClick={() => { setMenuOpen(false); navigate({ to: "/admin/members" }); }}
-                  className="w-full flex items-center gap-4 px-4 py-3.5 rounded-lg hover:bg-white/10 transition-colors text-left"
-                >
-                  <UserPlus className="h-5 w-5" />
-                  <span className="font-bold text-base">Manage Members</span>
-                </button>
+              {visibleAdminMenu.length > 0 && (
+                <>
+                  <div className="border-t border-white/15 my-2" />
+                  <p className="px-4 py-1 text-[10px] font-bold tracking-wider opacity-70">ADMIN TOOLS</p>
+                  {visibleAdminMenu.map(({ icon: Icon, label, to }) => (
+                    <button key={label} onClick={() => { setMenuOpen(false); navigate({ to }); }}
+                      className="w-full flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10 text-left">
+                      <Icon className="h-5 w-5" />
+                      <span className="font-bold text-sm">{label}</span>
+                    </button>
+                  ))}
+                </>
               )}
               <div className="border-t border-white/15 my-2" />
-              <button
-                onClick={async () => { await signOut(); setMenuOpen(false); navigate({ to: "/login" }); }}
-                className="w-full flex items-center gap-4 px-4 py-3.5 rounded-lg hover:bg-white/10 transition-colors text-left"
-              >
+              <button onClick={async () => { await signOut(); setMenuOpen(false); navigate({ to: "/login" }); }}
+                className="w-full flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10 text-left">
                 <LogOut className="h-5 w-5" />
-                <span className="font-bold text-base">Sign Out</span>
+                <span className="font-bold text-sm">Sign Out</span>
               </button>
-              <button onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-4 px-4 py-3.5 rounded-lg hover:bg-white/10 transition-colors">
+              <button onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-4 px-4 py-3 rounded-lg hover:bg-white/10">
                 <X className="h-5 w-5" />
-                <span className="font-bold text-base">Close</span>
+                <span className="font-bold text-sm">Close</span>
               </button>
             </nav>
           </aside>
@@ -132,17 +160,17 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
       <nav className="fixed bottom-0 inset-x-0 bg-card border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.04)] z-30">
         <div className="grid grid-cols-4 max-w-md mx-auto">
           {bottomNav.map(({ icon: Icon, label, to, badge }) => (
-            <Link
-              key={label}
-              to={to}
-              activeOptions={{ exact: true }}
-              className="flex flex-col items-center justify-center py-2.5 gap-1 group"
-            >
+            <Link key={label} to={to} activeOptions={{ exact: true }}
+              className="flex flex-col items-center justify-center py-2.5 gap-1 group">
               {({ isActive }) => (
                 <>
                   <div className="relative">
                     <Icon className={`h-6 w-6 ${isActive ? "text-[var(--brand-accent)]" : "text-[var(--brand)]"}`} />
-                    {badge && <span className="absolute -top-1 -right-1.5 h-3.5 w-3.5 rounded-full bg-[var(--brand-accent)] text-white text-[9px] font-bold flex items-center justify-center">!</span>}
+                    {badge && unreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[var(--brand-accent)] text-white text-[10px] font-bold flex items-center justify-center">
+                        {unreadCount > 9 ? "9+" : unreadCount}
+                      </span>
+                    )}
                   </div>
                   <span className={`text-xs font-semibold ${isActive ? "text-[var(--brand-accent)]" : "text-foreground"}`}>{label}</span>
                 </>
@@ -153,4 +181,19 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
       </nav>
     </div>
   );
+}
+
+// Reusable permission gate for whole pages
+export function PermissionGate({
+  perm, title, children,
+}: { perm: string | string[]; title: string; children: ReactNode }) {
+  const { hasAny, isLoading } = usePermissions();
+  const perms = Array.isArray(perm) ? perm : [perm];
+  if (isLoading) {
+    return <AppLayout title={title}><p className="text-sm text-muted-foreground text-center py-10">Checking permissions…</p></AppLayout>;
+  }
+  if (!hasAny(perms)) {
+    return <AppLayout title={title}><p className="text-sm text-destructive text-center py-10 px-4 font-semibold">You don't have permission to view this page.</p></AppLayout>;
+  }
+  return <AppLayout title={title}>{children}</AppLayout>;
 }
