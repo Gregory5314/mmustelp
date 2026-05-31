@@ -21,8 +21,15 @@ import { Route as ComplaintRouteImport } from './routes/complaint'
 import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileEditRouteImport } from './routes/profile.edit'
+import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminMentorshipRouteImport } from './routes/admin.mentorship'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
+import { Route as AdminMeetingsRouteImport } from './routes/admin.meetings'
+import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminEventsRouteImport } from './routes/admin.events'
+import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
+import { Route as AdminChapterRouteImport } from './routes/admin.chapter'
+import { Route as AdminAlumniRouteImport } from './routes/admin.alumni'
 
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
@@ -84,14 +91,49 @@ const ProfileEditRoute = ProfileEditRouteImport.update({
   path: '/edit',
   getParentRoute: () => ProfileRoute,
 } as any)
+const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
+  id: '/admin/subscriptions',
+  path: '/admin/subscriptions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminMentorshipRoute = AdminMentorshipRouteImport.update({
+  id: '/admin/mentorship',
+  path: '/admin/mentorship',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminMembersRoute = AdminMembersRouteImport.update({
   id: '/admin/members',
   path: '/admin/members',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminMeetingsRoute = AdminMeetingsRouteImport.update({
+  id: '/admin/meetings',
+  path: '/admin/meetings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminFinanceRoute = AdminFinanceRouteImport.update({
+  id: '/admin/finance',
+  path: '/admin/finance',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminEventsRoute = AdminEventsRouteImport.update({
   id: '/admin/events',
   path: '/admin/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminComplaintsRoute = AdminComplaintsRouteImport.update({
+  id: '/admin/complaints',
+  path: '/admin/complaints',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminChapterRoute = AdminChapterRouteImport.update({
+  id: '/admin/chapter',
+  path: '/admin/chapter',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAlumniRoute = AdminAlumniRouteImport.update({
+  id: '/admin/alumni',
+  path: '/admin/alumni',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -107,8 +149,15 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/alumni': typeof AdminAlumniRoute
+  '/admin/chapter': typeof AdminChapterRoute
+  '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/meetings': typeof AdminMeetingsRoute
   '/admin/members': typeof AdminMembersRoute
+  '/admin/mentorship': typeof AdminMentorshipRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRoutesByTo {
@@ -123,8 +172,15 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/alumni': typeof AdminAlumniRoute
+  '/admin/chapter': typeof AdminChapterRoute
+  '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/meetings': typeof AdminMeetingsRoute
   '/admin/members': typeof AdminMembersRoute
+  '/admin/mentorship': typeof AdminMentorshipRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRoutesById {
@@ -140,8 +196,15 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/admin/alumni': typeof AdminAlumniRoute
+  '/admin/chapter': typeof AdminChapterRoute
+  '/admin/complaints': typeof AdminComplaintsRoute
   '/admin/events': typeof AdminEventsRoute
+  '/admin/finance': typeof AdminFinanceRoute
+  '/admin/meetings': typeof AdminMeetingsRoute
   '/admin/members': typeof AdminMembersRoute
+  '/admin/mentorship': typeof AdminMentorshipRoute
+  '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/profile/edit': typeof ProfileEditRoute
 }
 export interface FileRouteTypes {
@@ -158,8 +221,15 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/alumni'
+    | '/admin/chapter'
+    | '/admin/complaints'
     | '/admin/events'
+    | '/admin/finance'
+    | '/admin/meetings'
     | '/admin/members'
+    | '/admin/mentorship'
+    | '/admin/subscriptions'
     | '/profile/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -174,8 +244,15 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/alumni'
+    | '/admin/chapter'
+    | '/admin/complaints'
     | '/admin/events'
+    | '/admin/finance'
+    | '/admin/meetings'
     | '/admin/members'
+    | '/admin/mentorship'
+    | '/admin/subscriptions'
     | '/profile/edit'
   id:
     | '__root__'
@@ -190,8 +267,15 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/admin/alumni'
+    | '/admin/chapter'
+    | '/admin/complaints'
     | '/admin/events'
+    | '/admin/finance'
+    | '/admin/meetings'
     | '/admin/members'
+    | '/admin/mentorship'
+    | '/admin/subscriptions'
     | '/profile/edit'
   fileRoutesById: FileRoutesById
 }
@@ -207,8 +291,15 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OfficialsRoute: typeof OfficialsRoute
   ProfileRoute: typeof ProfileRouteWithChildren
+  AdminAlumniRoute: typeof AdminAlumniRoute
+  AdminChapterRoute: typeof AdminChapterRoute
+  AdminComplaintsRoute: typeof AdminComplaintsRoute
   AdminEventsRoute: typeof AdminEventsRoute
+  AdminFinanceRoute: typeof AdminFinanceRoute
+  AdminMeetingsRoute: typeof AdminMeetingsRoute
   AdminMembersRoute: typeof AdminMembersRoute
+  AdminMentorshipRoute: typeof AdminMentorshipRoute
+  AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -297,6 +388,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileEditRouteImport
       parentRoute: typeof ProfileRoute
     }
+    '/admin/subscriptions': {
+      id: '/admin/subscriptions'
+      path: '/admin/subscriptions'
+      fullPath: '/admin/subscriptions'
+      preLoaderRoute: typeof AdminSubscriptionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/mentorship': {
+      id: '/admin/mentorship'
+      path: '/admin/mentorship'
+      fullPath: '/admin/mentorship'
+      preLoaderRoute: typeof AdminMentorshipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/members': {
       id: '/admin/members'
       path: '/admin/members'
@@ -304,11 +409,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMembersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/meetings': {
+      id: '/admin/meetings'
+      path: '/admin/meetings'
+      fullPath: '/admin/meetings'
+      preLoaderRoute: typeof AdminMeetingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/finance': {
+      id: '/admin/finance'
+      path: '/admin/finance'
+      fullPath: '/admin/finance'
+      preLoaderRoute: typeof AdminFinanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/events': {
       id: '/admin/events'
       path: '/admin/events'
       fullPath: '/admin/events'
       preLoaderRoute: typeof AdminEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/complaints': {
+      id: '/admin/complaints'
+      path: '/admin/complaints'
+      fullPath: '/admin/complaints'
+      preLoaderRoute: typeof AdminComplaintsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/chapter': {
+      id: '/admin/chapter'
+      path: '/admin/chapter'
+      fullPath: '/admin/chapter'
+      preLoaderRoute: typeof AdminChapterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/alumni': {
+      id: '/admin/alumni'
+      path: '/admin/alumni'
+      fullPath: '/admin/alumni'
+      preLoaderRoute: typeof AdminAlumniRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -337,8 +477,15 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OfficialsRoute: OfficialsRoute,
   ProfileRoute: ProfileRouteWithChildren,
+  AdminAlumniRoute: AdminAlumniRoute,
+  AdminChapterRoute: AdminChapterRoute,
+  AdminComplaintsRoute: AdminComplaintsRoute,
   AdminEventsRoute: AdminEventsRoute,
+  AdminFinanceRoute: AdminFinanceRoute,
+  AdminMeetingsRoute: AdminMeetingsRoute,
   AdminMembersRoute: AdminMembersRoute,
+  AdminMentorshipRoute: AdminMentorshipRoute,
+  AdminSubscriptionsRoute: AdminSubscriptionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
