@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      alumni: {
+        Row: {
+          added_by: string | null
+          contact: string | null
+          created_at: string
+          full_name: string
+          graduation_year: number | null
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          added_by?: string | null
+          contact?: string | null
+          created_at?: string
+          full_name: string
+          graduation_year?: number | null
+          id?: string
+          notes?: string | null
+        }
+        Update: {
+          added_by?: string | null
+          contact?: string | null
+          created_at?: string
+          full_name?: string
+          graduation_year?: number | null
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
+      chapter_profile: {
+        Row: {
+          about: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          id: string
+          logo_url: string | null
+          motto: string | null
+          name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          about?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          id?: string
+          logo_url?: string | null
+          motto?: string | null
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          about?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          id?: string
+          logo_url?: string | null
+          motto?: string | null
+          name?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       complaints: {
         Row: {
           category: string
@@ -44,6 +110,39 @@ export type Database = {
           status?: string
           subject?: string
           submitter_id?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          location: string | null
+          starts_at: string
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          starts_at: string
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          location?: string | null
+          starts_at?: string
+          status?: string
+          title?: string
         }
         Relationships: []
       }
@@ -82,6 +181,161 @@ export type Database = {
           },
         ]
       }
+      financial_reports: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          notes: string | null
+          period: string | null
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          period?: string | null
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          notes?: string | null
+          period?: string | null
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      meeting_reports: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          meeting_date: string
+          notes: string | null
+          title: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          meeting_date: string
+          notes?: string | null
+          title: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          meeting_date?: string
+          notes?: string | null
+          title?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      mentor_assignments: {
+        Row: {
+          assigned_by: string | null
+          assigned_until: string | null
+          created_at: string
+          id: string
+          profile_id: string
+          school: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          assigned_until?: string | null
+          created_at?: string
+          id?: string
+          profile_id: string
+          school: string
+        }
+        Update: {
+          assigned_by?: string | null
+          assigned_until?: string | null
+          created_at?: string
+          id?: string
+          profile_id?: string
+          school?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_assignments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mentorship_activities: {
+        Row: {
+          activity_date: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          title: string
+        }
+        Insert: {
+          activity_date: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          title: string
+        }
+        Update: {
+          activity_date?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read_at: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          recipient_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          recipient_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -94,6 +348,7 @@ export type Database = {
           phone: string | null
           scholar_code: string
           updated_at: string
+          year: number | null
         }
         Insert: {
           avatar_url?: string | null
@@ -106,6 +361,7 @@ export type Database = {
           phone?: string | null
           scholar_code: string
           updated_at?: string
+          year?: number | null
         }
         Update: {
           avatar_url?: string | null
@@ -118,6 +374,7 @@ export type Database = {
           phone?: string | null
           scholar_code?: string
           updated_at?: string
+          year?: number | null
         }
         Relationships: []
       }
@@ -141,6 +398,41 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          profile_id: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_id: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_id?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -179,6 +471,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      notify_all_members: {
+        Args: { _body: string; _link: string; _title: string; _type: string }
+        Returns: undefined
+      }
+      notify_users_with_permission: {
+        Args: {
+          _body: string
+          _link: string
+          _permission: string
+          _title: string
+          _type: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
