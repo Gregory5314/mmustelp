@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AppLayout } from "@/components/AppLayout";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { CalendarDays, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/activities")({
@@ -12,36 +13,88 @@ export const Route = createFileRoute("/activities")({
   component: Activities,
 });
 
-const activities = [
-  { name: "Leadership Workshop", date: "March 25, 2026", place: "MMUST Main Hall", status: "Upcoming" },
-  { name: "Career Mentorship Session", date: "February 10, 2026", place: "Resource Center", status: "Upcoming" },
-  { name: "Chapter Annual Meeting", date: "January 19, 2026", place: "Auditorium B", status: "Past" },
-  { name: "Community Outreach", date: "December 12, 2025", place: "St. Luke's High", status: "Past" },
-];
+type Ev = {
+  id: string;
+  title: string;
+  description: string | null;
+  starts_at: string;
+  location: string | null;
+  status: string;
+  photo_url: string | null;
+};
 
 function Activities() {
+  const [items, setItems] = useState<Ev[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Public read — only non-sensitive columns
+    supabase
+      .from("events")
+      .select("id,title,description,starts_at,location,status,photo_url")
+      .order("starts_at", { ascending: false })
+      .then(({ data }) => {
+        setItems((data ?? []) as Ev[]);
+        setLoading(false);
+      });
+  }, []);
+
+  const now = Date.now();
+  const upcoming = items.filter((e) => new Date(e.starts_at).getTime() >= now);
+  const past = items.filter((e) => new Date(e.starts_at).getTime() < now);
+
   return (
-    <AppLayout title="Chapter Activities" subtitle="Workshops, mentorship, and outreach.">
-      <section className="px-4 mt-4 space-y-3">
-        {activities.map((a) => (
-          <div key={a.name} className="bg-card border border-border rounded-xl p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <h3 className="text-base font-extrabold text-[var(--brand)]">{a.name}</h3>
-              <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${
-                a.status === "Upcoming"
-                  ? "bg-[var(--brand-accent)]/10 text-[var(--brand-accent)]"
-                  : "bg-muted text-muted-foreground"
-              }`}>{a.status}</span>
+    <main className="min-h-screen bg-background">
+      <header className="px-4 pt-6 pb-4 bg-[var(--brand)] text-brand-foreground">
+        <h1 className="text-2xl font-extrabold">Chapter Activities</h1>
+        <p className="text-sm opacity-90">Workshops, mentorship, and outreach.</p>
+      </header>
+
+      {loading ? (
+        <p className="px-4 mt-6 text-sm text-muted-foreground">Loading…</p>
+      ) : items.length === 0 ? (
+        <p className="px-4 mt-6 text-sm text-muted-foreground">No activities yet.</p>
+      ) : (
+        <>
+          {upcoming.length > 0 && <Section title="Upcoming" items={upcoming} />}
+          {past.length > 0 && <Section title="Past" items={past} />}
+        </>
+      )}
+    </main>
+  );
+}
+
+function Section({ title, items }: { title: string; items: Ev[] }) {
+  return (
+    <section className="px-4 mt-5">
+      <h2 className="text-sm font-extrabold tracking-wider text-[var(--brand)] mb-2 uppercase">{title}</h2>
+      <div className="space-y-3">
+        {items.map((a) => (
+          <article key={a.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+            <div className="aspect-[16/9] bg-muted">
+              {a.photo_url ? (
+                <img src={a.photo_url} alt={a.title} className="h-full w-full object-cover" />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] text-brand-foreground font-extrabold text-lg">
+                  Upcoming Event
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
-              <CalendarDays className="h-4 w-4" /> {a.date}
+            <div className="p-4">
+              <h3 className="text-base font-extrabold text-[var(--brand)]">{a.title}</h3>
+              {a.description && <p className="text-sm text-muted-foreground mt-1">{a.description}</p>}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
+                <CalendarDays className="h-4 w-4" /> {new Date(a.starts_at).toLocaleString()}
+              </div>
+              {a.location && (
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                  <MapPin className="h-4 w-4" /> {a.location}
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-              <MapPin className="h-4 w-4" /> {a.place}
-            </div>
-          </div>
+          </article>
         ))}
-      </section>
-    </AppLayout>
+      </div>
+    </section>
   );
 }
