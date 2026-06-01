@@ -2,10 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { useEffect, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { createMember } from "@/lib/admin.functions";
+import { createMember, deleteMember } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createFileRoute("/admin/members")({
   head: () => ({ meta: [{ title: "Manage Members — MMUST ELP" }] }),
@@ -16,8 +19,11 @@ type Row = { id: string; full_name: string; scholar_code: string; course: string
 
 function AdminMembers() {
   const { isAdmin, isLoading } = useAuth();
+  const { roles } = usePermissions();
+  const isPresident = roles.includes("president");
   const navigate = useNavigate();
   const create = useServerFn(createMember);
+  const remove = useServerFn(deleteMember);
 
   const [rows, setRows] = useState<Row[]>([]);
   const [form, setForm] = useState({
@@ -27,10 +33,12 @@ function AdminMembers() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmDel, setConfirmDel] = useState<Row | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !isAdmin) navigate({ to: "/", replace: true });
-  }, [isAdmin, isLoading, navigate]);
+    if (!isLoading && !isAdmin && !isPresident) navigate({ to: "/", replace: true });
+  }, [isAdmin, isPresident, isLoading, navigate]);
 
   const refresh = () => {
     supabase
@@ -39,7 +47,7 @@ function AdminMembers() {
       .order("created_at", { ascending: false })
       .then(({ data }) => setRows((data ?? []) as Row[]));
   };
-  useEffect(() => { if (isAdmin) refresh(); }, [isAdmin]);
+  useEffect(() => { if (isAdmin || isPresident) refresh(); }, [isAdmin, isPresident]);
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -56,7 +64,22 @@ function AdminMembers() {
     }
   };
 
-  if (isLoading || !isAdmin) {
+  const doDelete = async () => {
+    if (!confirmDel) return;
+    setDeleting(true);
+    try {
+      await remove({ data: { userId: confirmDel.id } });
+      toast.success(`${confirmDel.full_name || "Member"} deleted.`);
+      setConfirmDel(null);
+      refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Delete failed");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (isLoading || (!isAdmin && !isPresident)) {
     return (
       <AppLayout title="Manage Members">
         <p className="text-sm text-muted-foreground text-center py-10 px-4">Checking permissions…</p>
@@ -66,6 +89,7 @@ function AdminMembers() {
 
   return (
     <AppLayout title="Manage Members" subtitle="Admin tools — add and manage members.">
+      <Toaster position="top-center" />
       <section className="px-4 mt-4">
         <form onSubmit={onSubmit} className="bg-card border border-border rounded-2xl p-4 shadow-sm space-y-3">
           <h3 className="text-base font-extrabold text-[var(--brand)] flex items-center gap-2">
@@ -96,17 +120,60 @@ function AdminMembers() {
         </form>
       </section>
 
-      <section className="px-4 mt-6">
+      <section className="px-4 mt-6 pb-6">
         <h3 className="text-base font-extrabold text-[var(--brand)] mb-2">All Members ({rows.length})</h3>
         <div className="space-y-2">
           {rows.map((r) => (
-            <div key={r.id} className="bg-card border border-border rounded-xl px-3 py-2.5">
-              <p className="text-sm font-bold text-foreground">{r.full_name || "—"}</p>
-              <p className="text-xs text-muted-foreground">{r.scholar_code}{r.course ? ` • ${r.course}` : ""}</p>
+            <div key={r.id} className="bg-card border border-border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-foreground truncate">{r.full_name || "—"}</p>
+                <p className="text-xs text-muted-foreground truncate">{r.scholar_code}{r.course ? ` • ${r.course}` : ""}</p>
+              </div>
+              {isPresident && (
+                <button
+                  onClick={() => setConfirmDel(r)}
+                  className="p-2 text-destructive hover:bg-destructive/10 rounded shrink-0"
+                  title="Delete member"
+                  aria-label={`Delete ${r.full_name}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
             </div>
           ))}
         </div>
       </section>
+
+      {confirmDel && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4" role="dialog" aria-modal="true">
+          <div className="bg-card border border-border rounded-2xl p-5 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-extrabold text-destructive">Delete member?</h3>
+            <p className="text-sm mt-2 text-foreground">
+              <span className="font-bold">{confirmDel.full_name}</span>
+              <span className="block text-xs text-muted-foreground">{confirmDel.scholar_code}</span>
+            </p>
+            <p className="text-sm mt-3 text-muted-foreground">
+              Are you sure you want to delete this member? This action cannot be undone.
+            </p>
+            <div className="flex gap-2 mt-5">
+              <button
+                onClick={() => setConfirmDel(null)}
+                disabled={deleting}
+                className="flex-1 bg-muted text-foreground font-bold py-2.5 rounded-lg hover:bg-accent transition-colors disabled:opacity-60"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={doDelete}
+                disabled={deleting}
+                className="flex-1 bg-destructive text-destructive-foreground font-bold py-2.5 rounded-lg hover:bg-destructive/90 transition-colors disabled:opacity-60"
+              >
+                {deleting ? "Deleting…" : "Confirm"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

@@ -144,8 +144,25 @@ export const deleteMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ userId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    await assertPermission(context.userId, "admins.manage");
+    // Only Chapter President (Admin One) can delete members
+    const { data: isPresident } = await supabaseAdmin.rpc("has_role", {
+      _user_id: context.userId, _role: "president",
+    });
+    if (!isPresident) throw new Error("Only the Chapter President can delete members.");
+
+    // Capture name for the notification before deletion
+    const { data: profile } = await supabaseAdmin
+      .from("profiles").select("full_name, scholar_code").eq("id", data.userId).maybeSingle();
+
     const { error } = await supabaseAdmin.auth.admin.deleteUser(data.userId);
     if (error) throw new Error(error.message);
+
+    await supabaseAdmin.rpc("notify_users_with_permission", {
+      _permission: "admins.manage",
+      _type: "member_deleted",
+      _title: "Member deleted",
+      _body: `${profile?.full_name ?? "A member"} (${profile?.scholar_code ?? ""}) was removed.`,
+      _link: "/admin/members",
+    });
     return { ok: true };
   });

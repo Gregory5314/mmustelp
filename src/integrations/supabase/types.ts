@@ -120,6 +120,7 @@ export type Database = {
           description: string | null
           id: string
           location: string | null
+          photo_url: string | null
           starts_at: string
           status: string
           title: string
@@ -130,6 +131,7 @@ export type Database = {
           description?: string | null
           id?: string
           location?: string | null
+          photo_url?: string | null
           starts_at: string
           status?: string
           title: string
@@ -140,6 +142,7 @@ export type Database = {
           description?: string | null
           id?: string
           location?: string | null
+          photo_url?: string | null
           starts_at?: string
           status?: string
           title?: string
@@ -342,6 +345,7 @@ export type Database = {
           course: string | null
           created_at: string
           email: string | null
+          email_opt_in: boolean
           full_name: string
           id: string
           mentoring_school: string | null
@@ -355,6 +359,7 @@ export type Database = {
           course?: string | null
           created_at?: string
           email?: string | null
+          email_opt_in?: boolean
           full_name?: string
           id: string
           mentoring_school?: string | null
@@ -368,6 +373,7 @@ export type Database = {
           course?: string | null
           created_at?: string
           email?: string | null
+          email_opt_in?: boolean
           full_name?: string
           id?: string
           mentoring_school?: string | null
