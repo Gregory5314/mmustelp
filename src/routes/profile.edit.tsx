@@ -207,6 +207,28 @@ function EditProfile() {
           </button>
         </form>
       </section>
+
+      {isAdminLike && (
+        <section className="px-4 mt-2 mb-6">
+          <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+            <h3 className="text-base font-extrabold text-[var(--brand)]">Notification Preferences</h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              In-dashboard notifications are always on. Choose whether to also receive email alerts for events
+              your role can act on (events, finance, complaints, etc.).
+            </p>
+            <label className="mt-3 flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-foreground">Email me about dashboard alerts</span>
+              <input
+                type="checkbox"
+                checked={emailOptIn}
+                disabled={savingOptIn}
+                onChange={(e) => toggleEmailOptIn(e.target.checked)}
+                className="h-5 w-5 accent-[var(--brand)]"
+              />
+            </label>
+          </div>
+        </section>
+      )}
     </AppLayout>
   );
 }
