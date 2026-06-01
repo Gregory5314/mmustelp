@@ -48,6 +48,10 @@ function EditProfile() {
   const [pw, setPw] = useState({ next: "", confirm: "" });
   const [pwSaving, setPwSaving] = useState(false);
 
+  const [emailOptIn, setEmailOptIn] = useState(false);
+  const [isAdminLike, setIsAdminLike] = useState(false);
+  const [savingOptIn, setSavingOptIn] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data }) => {
@@ -60,8 +64,30 @@ function EditProfile() {
         mentoring_school: data.mentoring_school ?? "",
       });
       setAvatarUrl(data.avatar_url ?? null);
+      setEmailOptIn(!!(data as { email_opt_in?: boolean }).email_opt_in);
+    });
+    // Show the email toggle only if the user has at least one role other than plain "member"
+    supabase.from("user_roles").select("role").eq("user_id", user.id).then(({ data }) => {
+      const roles = (data ?? []).map((r) => r.role);
+      setIsAdminLike(roles.some((r) => r !== "member"));
     });
   }, [user]);
+
+  const toggleEmailOptIn = async (next: boolean) => {
+    if (!user) return;
+    setSavingOptIn(true);
+    setEmailOptIn(next);
+    const { error } = await supabase.from("profiles")
+      .update({ email_opt_in: next } as never)
+      .eq("id", user.id);
+    setSavingOptIn(false);
+    if (error) {
+      setEmailOptIn(!next);
+      return toast.error(error.message);
+    }
+    toast.success(next ? "Email notifications enabled" : "Email notifications disabled");
+  };
+
 
   const onSave = async (e: React.FormEvent) => {
     e.preventDefault();
