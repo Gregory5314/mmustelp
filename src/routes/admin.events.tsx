@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PermissionGate } from "@/components/AppLayout";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Calendar, CheckCircle2, Trash2 } from "lucide-react";
+import { Calendar, CheckCircle2, Trash2, ImagePlus } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -11,15 +11,21 @@ export const Route = createFileRoute("/admin/events")({
   component: () => <PermissionGate perm="events.update" title="Manage Events"><Page /></PermissionGate>,
 });
 
-type Ev = { id: string; title: string; description: string | null; starts_at: string; location: string | null; status: string };
+type Ev = {
+  id: string; title: string; description: string | null;
+  starts_at: string; location: string | null; status: string;
+  photo_url: string | null;
+};
 
 function Page() {
   const [items, setItems] = useState<Ev[]>([]);
   const [form, setForm] = useState({ title: "", description: "", starts_at: "", location: "" });
   const [busy, setBusy] = useState(false);
+  const [uploadingId, setUploadingId] = useState<string | null>(null);
 
-  const refresh = () => supabase.from("events").select("*").order("starts_at", { ascending: false })
-    .then(({ data }) => setItems((data ?? []) as Ev[]));
+  const refresh = () =>
+    supabase.from("events").select("*").order("starts_at", { ascending: false })
+      .then(({ data }) => setItems((data ?? []) as Ev[]));
   useEffect(() => { refresh(); }, []);
 
   const onSubmit = async (e: FormEvent) => {
@@ -48,6 +54,22 @@ function Page() {
     toast.success("Event removed."); refresh();
   };
 
+  const uploadPhoto = async (id: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    setUploadingId(id);
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    const path = `${id}/cover-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from("event_photos").upload(path, file, {
+      cacheControl: "3600", upsert: true, contentType: file.type,
+    });
+    if (upErr) { setUploadingId(null); return toast.error(upErr.message); }
+    const { data: pub } = supabase.storage.from("event_photos").getPublicUrl(path);
+    const { error: updErr } = await supabase.from("events").update({ photo_url: pub.publicUrl }).eq("id", id);
+    setUploadingId(null);
+    if (updErr) return toast.error(updErr.message);
+    toast.success("Event photo updated."); refresh();
+  };
+
   return (
     <>
       <Toaster />
@@ -66,31 +88,83 @@ function Page() {
         </form>
       </section>
 
-      <section className="px-4 mt-6 space-y-2">
+      <section className="px-4 mt-6 space-y-2 pb-4">
         <h3 className="text-base font-extrabold text-[var(--brand)]">All Events ({items.length})</h3>
         {items.map((ev) => (
-          <div key={ev.id} className="bg-card border border-border rounded-xl p-3">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1">
-                <p className="text-sm font-bold">{ev.title}</p>
-                <p className="text-xs text-muted-foreground">{new Date(ev.starts_at).toLocaleString()}{ev.location ? ` • ${ev.location}` : ""}</p>
-                <span className={`mt-1 inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded ${ev.status === "successful" ? "bg-green-100 text-green-700" : "bg-[var(--brand)]/10 text-[var(--brand)]"}`}>{ev.status}</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                {ev.status !== "successful" && (
-                  <button onClick={() => markSuccessful(ev.id)} className="p-2 text-green-600 hover:bg-green-50 rounded" title="Mark successful">
-                    <CheckCircle2 className="h-4 w-4" />
-                  </button>
-                )}
-                <button onClick={() => remove(ev.id)} className="p-2 text-destructive hover:bg-destructive/10 rounded">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <EventRow
+            key={ev.id}
+            ev={ev}
+            uploading={uploadingId === ev.id}
+            onMarkSuccessful={() => markSuccessful(ev.id)}
+            onRemove={() => remove(ev.id)}
+            onUploadPhoto={(file) => uploadPhoto(ev.id, file)}
+          />
         ))}
       </section>
     </>
+  );
+}
+
+function EventRow({
+  ev, uploading, onMarkSuccessful, onRemove, onUploadPhoto,
+}: {
+  ev: Ev; uploading: boolean;
+  onMarkSuccessful: () => void; onRemove: () => void;
+  onUploadPhoto: (file: File) => void;
+}) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="aspect-[16/9] bg-muted relative">
+        {ev.photo_url ? (
+          <img src={ev.photo_url} alt={ev.title} className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] text-brand-foreground font-extrabold">
+            Upcoming Event
+          </div>
+        )}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onUploadPhoto(f);
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="absolute bottom-2 right-2 inline-flex items-center gap-1 bg-white/90 text-[var(--brand)] text-[11px] font-bold px-2 py-1 rounded shadow disabled:opacity-60"
+        >
+          <ImagePlus className="h-3.5 w-3.5" />
+          {uploading ? "Uploading…" : ev.photo_url ? "Change photo" : "Add photo"}
+        </button>
+      </div>
+      <div className="p-3 flex items-start justify-between gap-2">
+        <div className="flex-1">
+          <p className="text-sm font-bold">{ev.title}</p>
+          <p className="text-xs text-muted-foreground">
+            {new Date(ev.starts_at).toLocaleString()}{ev.location ? ` • ${ev.location}` : ""}
+          </p>
+          <span className={`mt-1 inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
+            ev.status === "successful" ? "bg-green-100 text-green-700" : "bg-[var(--brand)]/10 text-[var(--brand)]"
+          }`}>{ev.status}</span>
+        </div>
+        <div className="flex flex-col gap-1">
+          {ev.status !== "successful" && (
+            <button onClick={onMarkSuccessful} className="p-2 text-green-600 hover:bg-green-50 rounded" title="Mark successful">
+              <CheckCircle2 className="h-4 w-4" />
+            </button>
+          )}
+          <button onClick={onRemove} className="p-2 text-destructive hover:bg-destructive/10 rounded">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
