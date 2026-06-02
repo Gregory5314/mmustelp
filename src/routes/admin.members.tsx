@@ -113,10 +113,24 @@ function AdminMembers() {
             <Field label="Course" value={form.course} onChange={(v) => setForm({ ...form, course: v })} className="col-span-2" />
             <Field label="Mentoring School" value={form.mentoringSchool} onChange={(v) => setForm({ ...form, mentoringSchool: v })} className="col-span-2" />
           </div>
-          <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <input type="checkbox" checked={form.makeAdmin} onChange={(e) => setForm({ ...form, makeAdmin: e.target.checked })} />
-            Grant admin access
-          </label>
+          {isPresident && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-[10px] font-bold tracking-wider text-muted-foreground">Assign Role</label>
+                <select
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value as typeof form.role })}
+                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                >
+                  {ASSIGNABLE_ROLES.map((r) => (
+                    <option key={r} value={r}>{roleLabel(r)}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-muted-foreground">The new admin's dashboard will be filtered to their role's modules.</p>
+              </div>
+              <Field label="Year (for Year-scoped officers)" value={form.year} onChange={(v) => setForm({ ...form, year: v })} placeholder="1-4" type="number" className="col-span-2" />
+            </div>
+          )}
           {error && <p className="text-sm text-destructive font-semibold">{error}</p>}
           {success && <p className="text-sm text-[var(--brand)] font-semibold">{success}</p>}
           <button
