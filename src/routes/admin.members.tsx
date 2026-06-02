@@ -29,7 +29,9 @@ function AdminMembers() {
   const [rows, setRows] = useState<Row[]>([]);
   const [form, setForm] = useState({
     scholarCode: "", password: "", fullName: "",
-    email: "", phone: "", course: "", mentoringSchool: "", makeAdmin: false,
+    email: "", phone: "", course: "", mentoringSchool: "",
+    role: "member" as (typeof ASSIGNABLE_ROLES)[number],
+    year: "" as string,
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
