@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserPlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { ASSIGNABLE_ROLES, roleLabel } from "@/lib/roles";
 
 export const Route = createFileRoute("/admin/members")({
   head: () => ({ meta: [{ title: "Manage Members — MMUST ELP" }] }),
@@ -28,7 +29,9 @@ function AdminMembers() {
   const [rows, setRows] = useState<Row[]>([]);
   const [form, setForm] = useState({
     scholarCode: "", password: "", fullName: "",
-    email: "", phone: "", course: "", mentoringSchool: "", makeAdmin: false,
+    email: "", phone: "", course: "", mentoringSchool: "",
+    role: "member" as (typeof ASSIGNABLE_ROLES)[number],
+    year: "" as string,
   });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -53,9 +56,15 @@ function AdminMembers() {
     e.preventDefault();
     setError(null); setSuccess(null); setSubmitting(true);
     try {
-      await create({ data: form });
-      setSuccess(`Member ${form.fullName} created. Share their scholar code & password to sign in.`);
-      setForm({ scholarCode: "", password: "", fullName: "", email: "", phone: "", course: "", mentoringSchool: "", makeAdmin: false });
+      const payload: Record<string, unknown> = {
+        scholarCode: form.scholarCode, password: form.password, fullName: form.fullName,
+        email: form.email, phone: form.phone, course: form.course,
+        mentoringSchool: form.mentoringSchool, role: form.role,
+      };
+      if (form.year) payload.year = Number(form.year);
+      await create({ data: payload });
+      setSuccess(`Member ${form.fullName} created as ${roleLabel(form.role)}. Share their scholar code & password to sign in.`);
+      setForm({ scholarCode: "", password: "", fullName: "", email: "", phone: "", course: "", mentoringSchool: "", role: "member", year: "" });
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create member");
@@ -104,10 +113,24 @@ function AdminMembers() {
             <Field label="Course" value={form.course} onChange={(v) => setForm({ ...form, course: v })} className="col-span-2" />
             <Field label="Mentoring School" value={form.mentoringSchool} onChange={(v) => setForm({ ...form, mentoringSchool: v })} className="col-span-2" />
           </div>
-          <label className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <input type="checkbox" checked={form.makeAdmin} onChange={(e) => setForm({ ...form, makeAdmin: e.target.checked })} />
-            Grant admin access
-          </label>
+          {isPresident && (
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-[10px] font-bold tracking-wider text-muted-foreground">Assign Role</label>
+                <select
+                  value={form.role}
+                  onChange={(e) => setForm({ ...form, role: e.target.value as typeof form.role })}
+                  className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
+                >
+                  {ASSIGNABLE_ROLES.map((r) => (
+                    <option key={r} value={r}>{roleLabel(r)}</option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-muted-foreground">The new admin's dashboard will be filtered to their role's modules.</p>
+              </div>
+              <Field label="Year (for Year-scoped officers)" value={form.year} onChange={(v) => setForm({ ...form, year: v })} placeholder="1-4" type="number" className="col-span-2" />
+            </div>
+          )}
           {error && <p className="text-sm text-destructive font-semibold">{error}</p>}
           {success && <p className="text-sm text-[var(--brand)] font-semibold">{success}</p>}
           <button
