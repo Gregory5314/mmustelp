@@ -56,9 +56,15 @@ function AdminMembers() {
     e.preventDefault();
     setError(null); setSuccess(null); setSubmitting(true);
     try {
-      await create({ data: form });
-      setSuccess(`Member ${form.fullName} created. Share their scholar code & password to sign in.`);
-      setForm({ scholarCode: "", password: "", fullName: "", email: "", phone: "", course: "", mentoringSchool: "", makeAdmin: false });
+      const payload: Record<string, unknown> = {
+        scholarCode: form.scholarCode, password: form.password, fullName: form.fullName,
+        email: form.email, phone: form.phone, course: form.course,
+        mentoringSchool: form.mentoringSchool, role: form.role,
+      };
+      if (form.year) payload.year = Number(form.year);
+      await create({ data: payload });
+      setSuccess(`Member ${form.fullName} created as ${roleLabel(form.role)}. Share their scholar code & password to sign in.`);
+      setForm({ scholarCode: "", password: "", fullName: "", email: "", phone: "", course: "", mentoringSchool: "", role: "member", year: "" });
       refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create member");
