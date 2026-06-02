@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserPlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
+import { ASSIGNABLE_ROLES, roleLabel } from "@/lib/roles";
 
 export const Route = createFileRoute("/admin/members")({
   head: () => ({ meta: [{ title: "Manage Members — MMUST ELP" }] }),
