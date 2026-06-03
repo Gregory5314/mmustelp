@@ -51,6 +51,8 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
   const { has, hasAny } = usePermissions();
   const [memberCount, setMemberCount] = useState<number | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [chapterLogo, setChapterLogo] = useState<string | null>(null);
+  const [chapterName, setChapterName] = useState<string>("MMUST ELP");
 
   useEffect(() => {
     if (!isLoading && !user) navigate({ to: "/login", replace: true });
@@ -60,6 +62,13 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
     if (!user) return;
     supabase.from("profiles").select("id", { count: "exact", head: true })
       .then(({ count }) => setMemberCount(count ?? 0));
+
+    supabase.from("chapter_profile").select("name,logo_url").limit(1).maybeSingle()
+      .then(({ data }) => {
+        if (data?.logo_url) setChapterLogo(data.logo_url);
+        if (data?.name) setChapterName(data.name);
+      });
+
 
     const loadUnread = () => {
       supabase.from("notifications").select("id", { count: "exact", head: true })
@@ -94,10 +103,10 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
     <div className="min-h-screen bg-background pb-24">
       <header className="bg-[var(--brand)] text-brand-foreground px-4 pt-3 pb-4 rounded-b-2xl shadow-md">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="MMUST ELP crest" width={48} height={48}
+          <img src={chapterLogo ?? defaultLogo} alt={`${chapterName} crest`} width={48} height={48}
                className="h-12 w-12 rounded-full bg-white p-0.5 object-contain" />
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-extrabold leading-tight tracking-tight">MMUST ELP</h1>
+            <h1 className="text-xl font-extrabold leading-tight tracking-tight truncate">{chapterName}</h1>
             <p className="text-xs opacity-90">Equity Leaders Program</p>
           </div>
           <div className="flex items-center gap-1.5 text-sm font-semibold">
