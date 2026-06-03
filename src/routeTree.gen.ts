@@ -22,6 +22,8 @@ import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProfileEditRouteImport } from './routes/profile.edit'
 import { Route as AdminSubscriptionsRouteImport } from './routes/admin.subscriptions'
+import { Route as AdminRecognitionRouteImport } from './routes/admin.recognition'
+import { Route as AdminQuotesRouteImport } from './routes/admin.quotes'
 import { Route as AdminMentorshipRouteImport } from './routes/admin.mentorship'
 import { Route as AdminMembersRouteImport } from './routes/admin.members'
 import { Route as AdminMeetingsRouteImport } from './routes/admin.meetings'
@@ -96,6 +98,16 @@ const AdminSubscriptionsRoute = AdminSubscriptionsRouteImport.update({
   path: '/admin/subscriptions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRecognitionRoute = AdminRecognitionRouteImport.update({
+  id: '/admin/recognition',
+  path: '/admin/recognition',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminQuotesRoute = AdminQuotesRouteImport.update({
+  id: '/admin/quotes',
+  path: '/admin/quotes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminMentorshipRoute = AdminMentorshipRouteImport.update({
   id: '/admin/mentorship',
   path: '/admin/mentorship',
@@ -157,6 +169,8 @@ export interface FileRoutesByFullPath {
   '/admin/meetings': typeof AdminMeetingsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/mentorship': typeof AdminMentorshipRoute
+  '/admin/quotes': typeof AdminQuotesRoute
+  '/admin/recognition': typeof AdminRecognitionRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/profile/edit': typeof ProfileEditRoute
 }
@@ -180,6 +194,8 @@ export interface FileRoutesByTo {
   '/admin/meetings': typeof AdminMeetingsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/mentorship': typeof AdminMentorshipRoute
+  '/admin/quotes': typeof AdminQuotesRoute
+  '/admin/recognition': typeof AdminRecognitionRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/profile/edit': typeof ProfileEditRoute
 }
@@ -204,6 +220,8 @@ export interface FileRoutesById {
   '/admin/meetings': typeof AdminMeetingsRoute
   '/admin/members': typeof AdminMembersRoute
   '/admin/mentorship': typeof AdminMentorshipRoute
+  '/admin/quotes': typeof AdminQuotesRoute
+  '/admin/recognition': typeof AdminRecognitionRoute
   '/admin/subscriptions': typeof AdminSubscriptionsRoute
   '/profile/edit': typeof ProfileEditRoute
 }
@@ -229,6 +247,8 @@ export interface FileRouteTypes {
     | '/admin/meetings'
     | '/admin/members'
     | '/admin/mentorship'
+    | '/admin/quotes'
+    | '/admin/recognition'
     | '/admin/subscriptions'
     | '/profile/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -252,6 +272,8 @@ export interface FileRouteTypes {
     | '/admin/meetings'
     | '/admin/members'
     | '/admin/mentorship'
+    | '/admin/quotes'
+    | '/admin/recognition'
     | '/admin/subscriptions'
     | '/profile/edit'
   id:
@@ -275,6 +297,8 @@ export interface FileRouteTypes {
     | '/admin/meetings'
     | '/admin/members'
     | '/admin/mentorship'
+    | '/admin/quotes'
+    | '/admin/recognition'
     | '/admin/subscriptions'
     | '/profile/edit'
   fileRoutesById: FileRoutesById
@@ -299,6 +323,8 @@ export interface RootRouteChildren {
   AdminMeetingsRoute: typeof AdminMeetingsRoute
   AdminMembersRoute: typeof AdminMembersRoute
   AdminMentorshipRoute: typeof AdminMentorshipRoute
+  AdminQuotesRoute: typeof AdminQuotesRoute
+  AdminRecognitionRoute: typeof AdminRecognitionRoute
   AdminSubscriptionsRoute: typeof AdminSubscriptionsRoute
 }
 
@@ -395,6 +421,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSubscriptionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/recognition': {
+      id: '/admin/recognition'
+      path: '/admin/recognition'
+      fullPath: '/admin/recognition'
+      preLoaderRoute: typeof AdminRecognitionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/quotes': {
+      id: '/admin/quotes'
+      path: '/admin/quotes'
+      fullPath: '/admin/quotes'
+      preLoaderRoute: typeof AdminQuotesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/mentorship': {
       id: '/admin/mentorship'
       path: '/admin/mentorship'
@@ -485,6 +525,8 @@ const rootRouteChildren: RootRouteChildren = {
   AdminMeetingsRoute: AdminMeetingsRoute,
   AdminMembersRoute: AdminMembersRoute,
   AdminMentorshipRoute: AdminMentorshipRoute,
+  AdminQuotesRoute: AdminQuotesRoute,
+  AdminRecognitionRoute: AdminRecognitionRoute,
   AdminSubscriptionsRoute: AdminSubscriptionsRoute,
 }
 export const routeTree = rootRouteImport

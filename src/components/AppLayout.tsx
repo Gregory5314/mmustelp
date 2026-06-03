@@ -26,6 +26,8 @@ const memberMenu: MenuItem[] = [
 const adminMenu: MenuItem[] = [
   { icon: UserPlus, label: "Manage Members", to: "/admin/members", perm: ["admins.manage", "members.add.any", "members.add.y1", "members.add.y2", "members.add.y3", "members.add.y4"] },
   { icon: Calendar, label: "Manage Events", to: "/admin/events", perm: "events.update" },
+  { icon: Quote, label: "Quote of the Week", to: "/admin/quotes", perm: "quotes.manage" },
+  { icon: Award, label: "Scholar Recognition", to: "/admin/recognition", perm: "recognition.manage" },
   { icon: DollarSign, label: "Financial Reports", to: "/admin/finance", perm: "finance.upload" },
   { icon: FileText, label: "Meeting Reports", to: "/admin/meetings", perm: "meetings.upload" },
   { icon: CheckSquare, label: "Subscriptions", to: "/admin/subscriptions", perm: "subscriptions.update" },
