@@ -4,8 +4,9 @@ import {
   Menu, X, Home, User, CheckSquare, BarChart3, Users, Shield,
   AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
   Calendar, FileText, DollarSign, GraduationCap, Heart, Settings,
+  Quote, Award,
 } from "lucide-react";
-import logo from "@/assets/elp-logo.png";
+import defaultLogo from "@/assets/elp-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,8 @@ const memberMenu: MenuItem[] = [
 const adminMenu: MenuItem[] = [
   { icon: UserPlus, label: "Manage Members", to: "/admin/members", perm: ["admins.manage", "members.add.any", "members.add.y1", "members.add.y2", "members.add.y3", "members.add.y4"] },
   { icon: Calendar, label: "Manage Events", to: "/admin/events", perm: "events.update" },
+  { icon: Quote, label: "Quote of the Week", to: "/admin/quotes", perm: "quotes.manage" },
+  { icon: Award, label: "Scholar Recognition", to: "/admin/recognition", perm: "recognition.manage" },
   { icon: DollarSign, label: "Financial Reports", to: "/admin/finance", perm: "finance.upload" },
   { icon: FileText, label: "Meeting Reports", to: "/admin/meetings", perm: "meetings.upload" },
   { icon: CheckSquare, label: "Subscriptions", to: "/admin/subscriptions", perm: "subscriptions.update" },
@@ -48,6 +51,8 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
   const { has, hasAny } = usePermissions();
   const [memberCount, setMemberCount] = useState<number | null>(null);
   const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [chapterLogo, setChapterLogo] = useState<string | null>(null);
+  const [chapterName, setChapterName] = useState<string>("MMUST ELP");
 
   useEffect(() => {
     if (!isLoading && !user) navigate({ to: "/login", replace: true });
@@ -57,6 +62,13 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
     if (!user) return;
     supabase.from("profiles").select("id", { count: "exact", head: true })
       .then(({ count }) => setMemberCount(count ?? 0));
+
+    supabase.from("chapter_profile").select("name,logo_url").limit(1).maybeSingle()
+      .then(({ data }) => {
+        if (data?.logo_url) setChapterLogo(data.logo_url);
+        if (data?.name) setChapterName(data.name);
+      });
+
 
     const loadUnread = () => {
       supabase.from("notifications").select("id", { count: "exact", head: true })
@@ -91,10 +103,10 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
     <div className="min-h-screen bg-background pb-24">
       <header className="bg-[var(--brand)] text-brand-foreground px-4 pt-3 pb-4 rounded-b-2xl shadow-md">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="MMUST ELP crest" width={48} height={48}
+          <img src={chapterLogo ?? defaultLogo} alt={`${chapterName} crest`} width={48} height={48}
                className="h-12 w-12 rounded-full bg-white p-0.5 object-contain" />
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-extrabold leading-tight tracking-tight">MMUST ELP</h1>
+            <h1 className="text-xl font-extrabold leading-tight tracking-tight truncate">{chapterName}</h1>
             <p className="text-xs opacity-90">Equity Leaders Program</p>
           </div>
           <div className="flex items-center gap-1.5 text-sm font-semibold">

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { BarChart3, Users, CalendarDays, TrendingUp, MapPin } from "lucide-react";
+import { CalendarDays, MapPin, Quote, Award, CheckSquare, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -8,68 +8,208 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Dashboard — MMUST ELP" },
-      { name: "description", content: "MMUST ELP chapter dashboard and key stats." },
+      { name: "description", content: "MMUST ELP chapter dashboard." },
     ],
   }),
   component: Dashboard,
 });
 
-const stats = [
-  { icon: Users, label: "Members", value: "82", to: "/members" as const },
-  { icon: TrendingUp, label: "Finance", value: "KSh 52,300", to: "/finance" as const },
-  { icon: CalendarDays, label: "Events", value: "3", to: "/activities" as const },
-  { icon: BarChart3, label: "Growth", value: "+12%", to: "/finance" as const },
-];
-
 type Ev = {
-  id: string; title: string; starts_at: string;
-  location: string | null; photo_url: string | null;
+  id: string;
+  title: string;
+  starts_at: string;
+  location: string | null;
+  description: string | null;
+  status: string;
+  photo_url: string | null;
+};
+
+type AttendedRow = {
+  profile_id: string;
+  profiles: { id: string; full_name: string | null; avatar_url: string | null } | null;
+};
+
+type AttendanceItem = {
+  profile_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  count: number;
+};
+
+type Q = { scholar_name: string; quote_text: string; photo_url: string | null };
+type R = {
+  scholar_name: string;
+  recognition_type: string;
+  description: string | null;
+  photo_url: string | null;
 };
 
 function Dashboard() {
   const [upcoming, setUpcoming] = useState<Ev[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceItem[]>([]);
+  const [totalAttended, setTotalAttended] = useState(0);
+  const [quote, setQuote] = useState<Q | null>(null);
+  const [recognition, setRecognition] = useState<R | null>(null);
 
   useEffect(() => {
     const nowIso = new Date().toISOString();
     supabase
       .from("events")
-      .select("id,title,starts_at,location,photo_url")
+      .select("id,title,starts_at,location,description,status,photo_url")
       .gte("starts_at", nowIso)
       .order("starts_at", { ascending: true })
       .limit(5)
       .then(({ data }) => setUpcoming((data ?? []) as Ev[]));
+
+    supabase
+      .from("events_attended")
+      .select("profile_id, profiles(id, full_name, avatar_url)")
+      .then(({ data }) => {
+        const rows = (data ?? []) as unknown as AttendedRow[];
+        setTotalAttended(rows.length);
+        const map = new Map<string, AttendanceItem>();
+        rows.forEach((r) => {
+          const key = r.profile_id;
+          const existing = map.get(key);
+          if (existing) existing.count += 1;
+          else
+            map.set(key, {
+              profile_id: key,
+              full_name: r.profiles?.full_name ?? "Unknown member",
+              avatar_url: r.profiles?.avatar_url ?? null,
+              count: 1,
+            });
+        });
+        setAttendance(
+          Array.from(map.values()).sort((a, b) => b.count - a.count).slice(0, 5),
+        );
+      });
+
+    supabase
+      .from("quotes")
+      .select("scholar_name,quote_text,photo_url")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setQuote((data as Q | null) ?? null));
+
+    supabase
+      .from("scholar_recognition")
+      .select("scholar_name,recognition_type,description,photo_url")
+      .eq("is_active", true)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => setRecognition((data as R | null) ?? null));
   }, []);
 
   return (
     <AppLayout title="Dashboard" subtitle="Welcome back to your chapter.">
+      {/* 2x2 grid summary cards */}
       <section className="px-4 mt-4 grid grid-cols-2 gap-3">
-        {stats.map(({ icon: Icon, label, value, to }) => (
-          <Link
-            key={label}
-            to={to}
-            className="bg-card border border-border rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow"
-          >
-            <Icon className="h-6 w-6 text-[var(--brand-accent)]" />
-            <p className="text-xs font-semibold tracking-wider text-muted-foreground mt-3">{label}</p>
-            <p className="text-xl font-extrabold text-[var(--brand)] leading-tight">{value}</p>
-          </Link>
-        ))}
+        <SummaryCard
+          icon={CheckSquare}
+          label="Events Attended"
+          value={String(totalAttended)}
+          sub={`${attendance.length} active members`}
+        />
+        <SummaryCard
+          icon={Quote}
+          label="Quote of the Week"
+          value={quote ? quote.scholar_name : "—"}
+          sub={quote ? "Tap to read" : "Not set"}
+        />
+        <SummaryCard
+          icon={CalendarDays}
+          label="Upcoming Events"
+          value={String(upcoming.length)}
+          sub="Next 5 scheduled"
+        />
+        <SummaryCard
+          icon={Trophy}
+          label="Scholar of the Month"
+          value={recognition ? recognition.scholar_name : "—"}
+          sub={recognition?.recognition_type ?? "Not set"}
+        />
       </section>
 
-      <section className="px-4 mt-6">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="text-base font-extrabold text-[var(--brand)]">Upcoming Events</h4>
-          <Link to="/activities" className="text-xs font-bold text-[var(--brand-accent)]">See all</Link>
-        </div>
-        {upcoming.length === 0 ? (
-          <div className="bg-card border border-border rounded-2xl p-4 text-sm text-muted-foreground">
-            No upcoming events scheduled.
+      {/* Events Attended */}
+      <Section icon={CheckSquare} title="Events Attended">
+        {attendance.length === 0 ? (
+          <Empty>No attendance records yet.</Empty>
+        ) : (
+          <div className="space-y-2">
+            {attendance.map((m) => (
+              <div
+                key={m.profile_id}
+                className="bg-card border border-border rounded-xl p-3 flex items-center gap-3"
+              >
+                {m.avatar_url ? (
+                  <img
+                    src={m.avatar_url}
+                    alt={m.full_name}
+                    className="h-10 w-10 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-[var(--brand)]/10 text-[var(--brand)] font-bold flex items-center justify-center text-sm">
+                    {m.full_name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate">{m.full_name}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {m.count} {m.count === 1 ? "event" : "events"} attended
+                  </p>
+                </div>
+                <span className="text-xl font-extrabold text-[var(--brand-accent)]">{m.count}</span>
+              </div>
+            ))}
           </div>
+        )}
+      </Section>
+
+      {/* Quote of the Week */}
+      <Section icon={Quote} title="Quote of the Week">
+        {!quote ? (
+          <Empty>No quote published yet.</Empty>
+        ) : (
+          <article className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex">
+            <div className="w-24 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] flex items-center justify-center shrink-0">
+              {quote.photo_url ? (
+                <img
+                  src={quote.photo_url}
+                  alt={quote.scholar_name}
+                  className="h-24 w-24 object-cover"
+                />
+              ) : (
+                <Quote className="h-10 w-10 text-brand-foreground" />
+              )}
+            </div>
+            <div className="flex-1 p-3 min-w-0">
+              <p className="text-sm italic text-foreground leading-snug">“{quote.quote_text}”</p>
+              <p className="mt-2 text-xs font-bold text-[var(--brand)]">— {quote.scholar_name}</p>
+            </div>
+          </article>
+        )}
+      </Section>
+
+      {/* Upcoming Events */}
+      <Section
+        icon={CalendarDays}
+        title="Upcoming Events"
+        action={<Link to="/activities" className="text-xs font-bold text-[var(--brand-accent)]">See all</Link>}
+      >
+        {upcoming.length === 0 ? (
+          <Empty>No upcoming events scheduled.</Empty>
         ) : (
           <div className="space-y-3">
             {upcoming.map((ev) => (
-              <article key={ev.id} className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
-                <div className="aspect-[16/9] bg-muted">
+              <article
+                key={ev.id}
+                className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm"
+              >
+                <div className="aspect-[16/9] bg-muted relative">
                   {ev.photo_url ? (
                     <img src={ev.photo_url} alt={ev.title} className="h-full w-full object-cover" />
                   ) : (
@@ -77,6 +217,9 @@ function Dashboard() {
                       Upcoming Event
                     </div>
                   )}
+                  <span className="absolute top-2 right-2 text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-white/90 text-[var(--brand)]">
+                    {ev.status}
+                  </span>
                 </div>
                 <div className="p-3">
                   <p className="text-sm font-extrabold text-[var(--brand)]">{ev.title}</p>
@@ -88,12 +231,49 @@ function Dashboard() {
                       <MapPin className="h-3.5 w-3.5" /> {ev.location}
                     </div>
                   )}
+                  {ev.description && (
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ev.description}</p>
+                  )}
                 </div>
               </article>
             ))}
           </div>
         )}
-      </section>
+      </Section>
+
+      {/* Scholar of the Month */}
+      <Section icon={Award} title="Scholar of the Month">
+        {!recognition ? (
+          <Empty>No scholar recognized yet.</Empty>
+        ) : (
+          <article className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] p-4 flex items-center gap-4">
+              {recognition.photo_url ? (
+                <img
+                  src={recognition.photo_url}
+                  alt={recognition.scholar_name}
+                  className="h-20 w-20 rounded-full object-cover border-4 border-white/40"
+                />
+              ) : (
+                <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center">
+                  <Trophy className="h-10 w-10 text-white" />
+                </div>
+              )}
+              <div className="text-brand-foreground min-w-0">
+                <p className="text-[10px] uppercase tracking-wider font-bold opacity-90">
+                  {recognition.recognition_type}
+                </p>
+                <p className="text-lg font-extrabold leading-tight truncate">
+                  {recognition.scholar_name}
+                </p>
+              </div>
+            </div>
+            {recognition.description && (
+              <p className="p-3 text-xs text-muted-foreground">{recognition.description}</p>
+            )}
+          </article>
+        )}
+      </Section>
 
       <section className="px-4 mt-6 mb-6">
         <h4 className="text-base font-extrabold text-[var(--brand)] mb-2">Quick Actions</h4>
@@ -110,5 +290,58 @@ function Dashboard() {
         </div>
       </section>
     </AppLayout>
+  );
+}
+
+function SummaryCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  sub?: string;
+}) {
+  return (
+    <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+      <Icon className="h-6 w-6 text-[var(--brand-accent)]" />
+      <p className="text-[10px] font-bold tracking-wider text-muted-foreground mt-3 uppercase">{label}</p>
+      <p className="text-lg font-extrabold text-[var(--brand)] leading-tight truncate">{value}</p>
+      {sub && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
+    </div>
+  );
+}
+
+function Section({
+  icon: Icon,
+  title,
+  action,
+  children,
+}: {
+  icon: any;
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="px-4 mt-6">
+      <div className="flex items-center justify-between mb-2">
+        <h4 className="text-base font-extrabold text-[var(--brand)] flex items-center gap-1.5">
+          <Icon className="h-4 w-4" /> {title}
+        </h4>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="bg-card border border-border rounded-2xl p-4 text-sm text-muted-foreground">
+      {children}
+    </div>
   );
 }
