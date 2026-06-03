@@ -4,8 +4,9 @@ import {
   Menu, X, Home, User, CheckSquare, BarChart3, Users, Shield,
   AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
   Calendar, FileText, DollarSign, GraduationCap, Heart, Settings,
+  Quote, Award,
 } from "lucide-react";
-import logo from "@/assets/elp-logo.png";
+import defaultLogo from "@/assets/elp-logo.png";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
