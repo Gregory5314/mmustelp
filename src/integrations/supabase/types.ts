@@ -384,6 +384,39 @@ export type Database = {
         }
         Relationships: []
       }
+      quotes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          photo_url: string | null
+          quote_text: string
+          scholar_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          photo_url?: string | null
+          quote_text: string
+          scholar_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          photo_url?: string | null
+          quote_text?: string
+          scholar_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       role_permissions: {
         Row: {
           created_at: string
@@ -402,6 +435,42 @@ export type Database = {
           id?: string
           permission?: string
           role?: Database["public"]["Enums"]["app_role"]
+        }
+        Relationships: []
+      }
+      scholar_recognition: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          photo_url: string | null
+          recognition_type: string
+          scholar_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          photo_url?: string | null
+          recognition_type?: string
+          scholar_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          photo_url?: string | null
+          recognition_type?: string
+          scholar_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
