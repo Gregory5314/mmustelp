@@ -174,21 +174,27 @@ function Dashboard() {
         {!quote ? (
           <Empty>No quote published yet.</Empty>
         ) : (
-          <article className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex">
-            <div className="w-24 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] flex items-center justify-center shrink-0">
-              {quote.photo_url ? (
-                <img
-                  src={quote.photo_url}
-                  alt={quote.scholar_name}
-                  className="h-24 w-24 object-cover"
-                />
-              ) : (
-                <Quote className="h-10 w-10 text-brand-foreground" />
-              )}
-            </div>
-            <div className="flex-1 p-3 min-w-0">
-              <p className="text-sm italic text-foreground leading-snug">“{quote.quote_text}”</p>
-              <p className="mt-2 text-xs font-bold text-[var(--brand)]">— {quote.scholar_name}</p>
+          <article className="relative bg-card border border-border rounded-2xl shadow-sm overflow-hidden aspect-[4/3]">
+            {quote.photo_url ? (
+              <img
+                src={quote.photo_url}
+                alt={quote.scholar_name}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] flex items-center justify-center">
+                <Quote className="h-16 w-16 text-brand-foreground/40" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+            <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
+              <Quote className="h-5 w-5 mb-1 opacity-80" />
+              <p className="text-sm italic leading-snug line-clamp-5 drop-shadow">
+                “{quote.quote_text}”
+              </p>
+              <p className="mt-2 text-xs font-extrabold uppercase tracking-wider drop-shadow">
+                — {quote.scholar_name}
+              </p>
             </div>
           </article>
         )}
@@ -246,31 +252,32 @@ function Dashboard() {
         {!recognition ? (
           <Empty>No scholar recognized yet.</Empty>
         ) : (
-          <article className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] p-4 flex items-center gap-4">
-              {recognition.photo_url ? (
-                <img
-                  src={recognition.photo_url}
-                  alt={recognition.scholar_name}
-                  className="h-20 w-20 rounded-full object-cover border-4 border-white/40"
-                />
-              ) : (
-                <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center">
-                  <Trophy className="h-10 w-10 text-white" />
-                </div>
-              )}
-              <div className="text-brand-foreground min-w-0">
-                <p className="text-[10px] uppercase tracking-wider font-bold opacity-90">
-                  {recognition.recognition_type}
-                </p>
-                <p className="text-lg font-extrabold leading-tight truncate">
-                  {recognition.scholar_name}
-                </p>
+          <article className="relative bg-card border border-border rounded-2xl shadow-sm overflow-hidden aspect-[4/3]">
+            {recognition.photo_url ? (
+              <img
+                src={recognition.photo_url}
+                alt={recognition.scholar_name}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] flex items-center justify-center">
+                <Trophy className="h-16 w-16 text-white/50" />
               </div>
-            </div>
-            {recognition.description && (
-              <p className="p-3 text-xs text-muted-foreground">{recognition.description}</p>
             )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+            <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
+              <p className="text-[10px] uppercase tracking-wider font-bold opacity-90 drop-shadow">
+                {recognition.recognition_type}
+              </p>
+              <p className="text-xl font-extrabold leading-tight drop-shadow line-clamp-2">
+                {recognition.scholar_name}
+              </p>
+              {recognition.description && (
+                <p className="text-xs mt-1 opacity-95 drop-shadow line-clamp-3">
+                  {recognition.description}
+                </p>
+              )}
+            </div>
           </article>
         )}
       </Section>
