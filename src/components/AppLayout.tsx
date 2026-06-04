@@ -116,7 +116,7 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
         </div>
       </header>
 
-      <div className="px-4 pt-4">
+      <div className="sticky top-0 z-30 px-4 pt-4 pb-2 bg-background">
         <div className="flex items-center gap-3">
           <button onClick={() => setMenuOpen(true)} aria-label="Open menu"
             className="p-1.5 -ml-1.5 rounded-md hover:bg-accent">
