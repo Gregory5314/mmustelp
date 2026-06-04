@@ -77,7 +77,7 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
     };
     loadUnread();
 
-    const channel = supabase.channel(`notif-${user.id}`)
+    const channel = supabase.channel(`notifications:${user.id}`, { config: { private: true } })
       .on("postgres_changes",
         { event: "*", schema: "public", table: "notifications", filter: `recipient_id=eq.${user.id}` },
         loadUnread)
