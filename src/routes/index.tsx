@@ -252,31 +252,32 @@ function Dashboard() {
         {!recognition ? (
           <Empty>No scholar recognized yet.</Empty>
         ) : (
-          <article className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] p-4 flex items-center gap-4">
-              {recognition.photo_url ? (
-                <img
-                  src={recognition.photo_url}
-                  alt={recognition.scholar_name}
-                  className="h-20 w-20 rounded-full object-cover border-4 border-white/40"
-                />
-              ) : (
-                <div className="h-20 w-20 rounded-full bg-white/20 flex items-center justify-center">
-                  <Trophy className="h-10 w-10 text-white" />
-                </div>
-              )}
-              <div className="text-brand-foreground min-w-0">
-                <p className="text-[10px] uppercase tracking-wider font-bold opacity-90">
-                  {recognition.recognition_type}
-                </p>
-                <p className="text-lg font-extrabold leading-tight truncate">
-                  {recognition.scholar_name}
-                </p>
+          <article className="relative bg-card border border-border rounded-2xl shadow-sm overflow-hidden aspect-[4/3]">
+            {recognition.photo_url ? (
+              <img
+                src={recognition.photo_url}
+                alt={recognition.scholar_name}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] flex items-center justify-center">
+                <Trophy className="h-16 w-16 text-white/50" />
               </div>
-            </div>
-            {recognition.description && (
-              <p className="p-3 text-xs text-muted-foreground">{recognition.description}</p>
             )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+            <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
+              <p className="text-[10px] uppercase tracking-wider font-bold opacity-90 drop-shadow">
+                {recognition.recognition_type}
+              </p>
+              <p className="text-xl font-extrabold leading-tight drop-shadow line-clamp-2">
+                {recognition.scholar_name}
+              </p>
+              {recognition.description && (
+                <p className="text-xs mt-1 opacity-95 drop-shadow line-clamp-3">
+                  {recognition.description}
+                </p>
+              )}
+            </div>
           </article>
         )}
       </Section>
