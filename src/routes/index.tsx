@@ -174,21 +174,27 @@ function Dashboard() {
         {!quote ? (
           <Empty>No quote published yet.</Empty>
         ) : (
-          <article className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden flex">
-            <div className="w-24 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] flex items-center justify-center shrink-0">
-              {quote.photo_url ? (
-                <img
-                  src={quote.photo_url}
-                  alt={quote.scholar_name}
-                  className="h-24 w-24 object-cover"
-                />
-              ) : (
-                <Quote className="h-10 w-10 text-brand-foreground" />
-              )}
-            </div>
-            <div className="flex-1 p-3 min-w-0">
-              <p className="text-sm italic text-foreground leading-snug">“{quote.quote_text}”</p>
-              <p className="mt-2 text-xs font-bold text-[var(--brand)]">— {quote.scholar_name}</p>
+          <article className="relative bg-card border border-border rounded-2xl shadow-sm overflow-hidden aspect-[4/3]">
+            {quote.photo_url ? (
+              <img
+                src={quote.photo_url}
+                alt={quote.scholar_name}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--brand)] to-[var(--brand-accent)] flex items-center justify-center">
+                <Quote className="h-16 w-16 text-brand-foreground/40" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10" />
+            <div className="absolute inset-0 p-4 flex flex-col justify-end text-white">
+              <Quote className="h-5 w-5 mb-1 opacity-80" />
+              <p className="text-sm italic leading-snug line-clamp-5 drop-shadow">
+                “{quote.quote_text}”
+              </p>
+              <p className="mt-2 text-xs font-extrabold uppercase tracking-wider drop-shadow">
+                — {quote.scholar_name}
+              </p>
             </div>
           </article>
         )}
