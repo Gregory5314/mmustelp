@@ -31,7 +31,7 @@ function Notifications() {
   };
   useEffect(() => { refresh();
     if (!user) return;
-    const ch = supabase.channel(`n-${user.id}`)
+    const ch = supabase.channel(`notifications:${user.id}`, { config: { private: true } })
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `recipient_id=eq.${user.id}` }, refresh)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
