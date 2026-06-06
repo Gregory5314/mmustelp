@@ -33,12 +33,16 @@ const fields: { key: keyof Form; label: string; type?: string; inputMode?: "text
 
 function EditProfile() {
   const { user } = useAuth();
+  const { roles } = usePermissions();
+  const canEditMentoringSchool = roles.includes("mentorship_coordinator") || roles.includes("president");
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [fullName, setFullName] = useState("");
+  const [scholarCode, setScholarCode] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [values, setValues] = useState<Form>({
-    full_name: "", course: "", phone: "", email: "", mentoring_school: "",
+    course: "", phone: "", email: "", mentoring_school: "",
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
