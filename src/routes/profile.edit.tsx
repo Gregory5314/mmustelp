@@ -58,8 +58,9 @@ function EditProfile() {
     if (!user) return;
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data }) => {
       if (!data) return;
+      setFullName(data.full_name ?? "");
+      setScholarCode(data.scholar_code ?? "");
       setValues({
-        full_name: data.full_name ?? "",
         course: data.course ?? "",
         phone: data.phone ?? "",
         email: data.email ?? "",
