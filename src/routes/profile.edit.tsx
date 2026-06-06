@@ -96,7 +96,13 @@ function EditProfile() {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update(values).eq("id", user.id);
+    const payload: Partial<Form> = {
+      course: values.course,
+      phone: values.phone,
+      email: values.email,
+    };
+    if (canEditMentoringSchool) payload.mentoring_school = values.mentoring_school;
+    const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile updated");
