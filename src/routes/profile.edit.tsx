@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { ChevronLeft, Save, Camera, KeyRound, User as UserIcon } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
+import { ChevronLeft, Save, Camera, KeyRound, User as UserIcon, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/profile/edit")({
   head: () => ({
@@ -18,7 +19,6 @@ export const Route = createFileRoute("/profile/edit")({
 });
 
 type Form = {
-  full_name: string;
   course: string;
   phone: string;
   email: string;
@@ -26,21 +26,23 @@ type Form = {
 };
 
 const fields: { key: keyof Form; label: string; type?: string; inputMode?: "text" | "email" | "tel" }[] = [
-  { key: "full_name", label: "Full Name" },
   { key: "course", label: "Course" },
   { key: "phone", label: "Phone Number", type: "tel", inputMode: "tel" },
   { key: "email", label: "Email Address", type: "email", inputMode: "email" },
-  { key: "mentoring_school", label: "Mentoring School" },
 ];
 
 function EditProfile() {
   const { user } = useAuth();
+  const { roles } = usePermissions();
+  const canEditMentoringSchool = roles.includes("mentorship_coordinator") || roles.includes("president");
   const navigate = useNavigate();
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [fullName, setFullName] = useState("");
+  const [scholarCode, setScholarCode] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [values, setValues] = useState<Form>({
-    full_name: "", course: "", phone: "", email: "", mentoring_school: "",
+    course: "", phone: "", email: "", mentoring_school: "",
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -56,8 +58,9 @@ function EditProfile() {
     if (!user) return;
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data }) => {
       if (!data) return;
+      setFullName(data.full_name ?? "");
+      setScholarCode(data.scholar_code ?? "");
       setValues({
-        full_name: data.full_name ?? "",
         course: data.course ?? "",
         phone: data.phone ?? "",
         email: data.email ?? "",
@@ -93,7 +96,13 @@ function EditProfile() {
     e.preventDefault();
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update(values).eq("id", user.id);
+    const payload: Partial<Form> = {
+      course: values.course,
+      phone: values.phone,
+      email: values.email,
+    };
+    if (canEditMentoringSchool) payload.mentoring_school = values.mentoring_school;
+    const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile updated");
@@ -164,6 +173,8 @@ function EditProfile() {
 
       <form onSubmit={onSave} className="px-4 mt-3 space-y-3" noValidate>
         <div className="bg-card border border-border rounded-2xl p-4 space-y-3 shadow-sm">
+          <ReadOnly label="FULL NAME" value={fullName || "—"} hint="Name is set by the chapter administrator." />
+          <ReadOnly label="SCHOLAR CODE" value={scholarCode || "—"} hint="Issued by the chapter — cannot be changed." />
           {fields.map((f) => (
             <div key={f.key}>
               <label className="text-[10px] font-semibold tracking-wider text-muted-foreground">{f.label.toUpperCase()}</label>
@@ -177,6 +188,22 @@ function EditProfile() {
               />
             </div>
           ))}
+          <div>
+            <label className="text-[10px] font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
+              MENTORING SCHOOL {!canEditMentoringSchool && <Lock className="h-3 w-3" />}
+            </label>
+            <input
+              type="text"
+              value={values.mentoring_school}
+              maxLength={160}
+              disabled={!canEditMentoringSchool}
+              onChange={(e) => setValues({ ...values, mentoring_school: e.target.value })}
+              className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm font-semibold text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:opacity-70 disabled:cursor-not-allowed"
+            />
+            {!canEditMentoringSchool && (
+              <p className="mt-1 text-[11px] text-muted-foreground">Assigned by the Mentorship Coordinator.</p>
+            )}
+          </div>
         </div>
         <button type="submit" disabled={saving}
           className="w-full inline-flex items-center justify-center gap-2 bg-[var(--brand)] text-brand-foreground font-bold py-3 rounded-lg shadow hover:bg-[var(--brand-deep)] transition-colors disabled:opacity-60">
@@ -230,5 +257,19 @@ function EditProfile() {
         </section>
       )}
     </AppLayout>
+  );
+}
+
+function ReadOnly({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div>
+      <label className="text-[10px] font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
+        {label} <Lock className="h-3 w-3" />
+      </label>
+      <div className="mt-1 w-full rounded-lg border border-input bg-muted/50 px-3 py-2 text-sm font-semibold text-foreground">
+        {value}
+      </div>
+      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
+    </div>
   );
 }
