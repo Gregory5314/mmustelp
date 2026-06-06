@@ -31,7 +31,11 @@ function Notifications() {
   };
   useEffect(() => { refresh();
     if (!user) return;
-    const ch = supabase.channel(`notifications:${user.id}`, { config: { private: true } })
+    const topic = `notifications:${user.id}`;
+    supabase.getChannels()
+      .filter((c) => c.topic === `realtime:${topic}`)
+      .forEach((c) => { supabase.removeChannel(c); });
+    const ch = supabase.channel(topic, { config: { private: true } })
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `recipient_id=eq.${user.id}` }, refresh)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
