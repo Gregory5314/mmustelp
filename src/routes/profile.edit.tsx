@@ -259,3 +259,17 @@ function EditProfile() {
     </AppLayout>
   );
 }
+
+function ReadOnly({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div>
+      <label className="text-[10px] font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
+        {label} <Lock className="h-3 w-3" />
+      </label>
+      <div className="mt-1 w-full rounded-lg border border-input bg-muted/50 px-3 py-2 text-sm font-semibold text-foreground">
+        {value}
+      </div>
+      {hint && <p className="mt-1 text-[11px] text-muted-foreground">{hint}</p>}
+    </div>
+  );
+}
