@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { ChevronLeft, Save, Camera, KeyRound, User as UserIcon } from "lucide-react";
+import { usePermissions } from "@/hooks/use-permissions";
+import { ChevronLeft, Save, Camera, KeyRound, User as UserIcon, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/profile/edit")({
   head: () => ({
@@ -18,7 +19,6 @@ export const Route = createFileRoute("/profile/edit")({
 });
 
 type Form = {
-  full_name: string;
   course: string;
   phone: string;
   email: string;
@@ -26,11 +26,9 @@ type Form = {
 };
 
 const fields: { key: keyof Form; label: string; type?: string; inputMode?: "text" | "email" | "tel" }[] = [
-  { key: "full_name", label: "Full Name" },
   { key: "course", label: "Course" },
   { key: "phone", label: "Phone Number", type: "tel", inputMode: "tel" },
   { key: "email", label: "Email Address", type: "email", inputMode: "email" },
-  { key: "mentoring_school", label: "Mentoring School" },
 ];
 
 function EditProfile() {
