@@ -34,8 +34,6 @@ function ProfilePage() {
   const [p, setP] = useState<Profile | null>(null);
   const [events, setEvents] = useState<EventRow[]>([]);
 
-  if (location.pathname !== "/profile") return <Outlet />;
-
   useEffect(() => {
     if (!user) return;
     supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
@@ -47,6 +45,8 @@ function ProfilePage() {
       .order("event_date", { ascending: false })
       .then(({ data }) => setEvents((data ?? []) as EventRow[]));
   }, [user]);
+
+  if (location.pathname !== "/profile") return <Outlet />;
 
   if (!p) {
     return (
