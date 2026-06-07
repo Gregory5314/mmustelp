@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { ChevronRight, CalendarDays, Pencil, User as UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -29,6 +29,7 @@ type Profile = {
 type EventRow = { id: string; title: string; event_date: string };
 
 function ProfilePage() {
+  const location = useLocation();
   const { user } = useAuth();
   const [p, setP] = useState<Profile | null>(null);
   const [events, setEvents] = useState<EventRow[]>([]);
@@ -44,6 +45,8 @@ function ProfilePage() {
       .order("event_date", { ascending: false })
       .then(({ data }) => setEvents((data ?? []) as EventRow[]));
   }, [user]);
+
+  if (location.pathname !== "/profile") return <Outlet />;
 
   if (!p) {
     return (
