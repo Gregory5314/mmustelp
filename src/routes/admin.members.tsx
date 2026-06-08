@@ -178,7 +178,7 @@ function AdminMembers() {
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-base font-extrabold text-[var(--brand)] flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" /> Active Members
+              <BarChart3 className="h-5 w-5" /> Active Members (approved subscriptions)
             </h3>
             <button
               onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
