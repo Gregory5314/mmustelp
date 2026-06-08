@@ -6,7 +6,7 @@ import { createMember, deleteMember } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Trash2 } from "lucide-react";
+import { UserPlus, Trash2, BarChart3, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { ASSIGNABLE_ROLES, roleLabel } from "@/lib/roles";
@@ -27,6 +27,8 @@ function AdminMembers() {
   const remove = useServerFn(deleteMember);
 
   const [rows, setRows] = useState<Row[]>([]);
+  const [activity, setActivity] = useState<{ id: string; name: string; count: number }[]>([]);
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [form, setForm] = useState({
     scholarCode: "", password: "", fullName: "",
     email: "", phone: "", course: "", mentoringSchool: "",
@@ -48,7 +50,26 @@ function AdminMembers() {
       .from("profiles")
       .select("id, full_name, scholar_code, course")
       .order("created_at", { ascending: false })
-      .then(({ data }) => setRows((data ?? []) as Row[]));
+      .then(({ data }) => {
+        const list = (data ?? []) as Row[];
+        setRows(list);
+        supabase
+          .from("events_attended")
+          .select("profile_id")
+          .then(({ data: att }) => {
+            const counts = new Map<string, number>();
+            (att ?? []).forEach((r: { profile_id: string }) => {
+              counts.set(r.profile_id, (counts.get(r.profile_id) ?? 0) + 1);
+            });
+            setActivity(
+              list.map((m) => ({
+                id: m.id,
+                name: m.full_name || m.scholar_code,
+                count: counts.get(m.id) ?? 0,
+              })),
+            );
+          });
+      });
   };
   useEffect(() => { if (isAdmin || isPresident) refresh(); }, [isAdmin, isPresident]);
 
@@ -141,6 +162,56 @@ function AdminMembers() {
             {submitting ? "Creating…" : "Create Member"}
           </button>
         </form>
+      </section>
+
+
+      <section className="px-4 mt-6">
+        <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-extrabold text-[var(--brand)] flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" /> Active Members
+            </h3>
+            <button
+              onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
+              className="text-[11px] font-bold text-[var(--brand-accent)] flex items-center gap-1 px-2 py-1 rounded hover:bg-accent"
+            >
+              <ArrowUpDown className="h-3 w-3" />
+              {sortDir === "desc" ? "Most active" : "Least active"}
+            </button>
+          </div>
+          {activity.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No attendance data yet.</p>
+          ) : (
+            (() => {
+              const sorted = [...activity].sort((a, b) =>
+                sortDir === "desc" ? b.count - a.count : a.count - b.count,
+              );
+              const max = Math.max(1, ...sorted.map((s) => s.count));
+              const top = sorted.slice(0, 15);
+              return (
+                <div className="space-y-2">
+                  {top.map((m) => (
+                    <div key={m.id}>
+                      <div className="flex items-center justify-between text-xs mb-0.5">
+                        <span className="font-semibold text-foreground truncate pr-2">{m.name}</span>
+                        <span className="font-extrabold text-[var(--brand-accent)] tabular-nums">{m.count}</span>
+                      </div>
+                      <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-[var(--brand)] to-[var(--brand-accent)] rounded-full transition-all"
+                          style={{ width: `${(m.count / max) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  {sorted.length > 15 && (
+                    <p className="text-[11px] text-muted-foreground pt-1">Showing top 15 of {sorted.length}</p>
+                  )}
+                </div>
+              );
+            })()
+          )}
+        </div>
       </section>
 
       <section className="px-4 mt-6 pb-6">
