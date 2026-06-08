@@ -189,7 +189,7 @@ function AdminMembers() {
             </button>
           </div>
           {activity.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No attendance data yet.</p>
+            <p className="text-xs text-muted-foreground">No members with active subscriptions yet. Treasurer or president must approve in Subscriptions.</p>
           ) : (
             (() => {
               const sorted = [...activity].sort((a, b) =>
