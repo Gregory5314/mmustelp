@@ -6,7 +6,7 @@ import { createMember, deleteMember } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Trash2 } from "lucide-react";
+import { UserPlus, Trash2, BarChart3, ArrowUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { ASSIGNABLE_ROLES, roleLabel } from "@/lib/roles";
