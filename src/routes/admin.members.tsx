@@ -54,20 +54,29 @@ function AdminMembers() {
         const list = (data ?? []) as Row[];
         setRows(list);
         supabase
-          .from("events_attended")
-          .select("profile_id")
-          .then(({ data: att }) => {
-            const counts = new Map<string, number>();
-            (att ?? []).forEach((r: { profile_id: string }) => {
-              counts.set(r.profile_id, (counts.get(r.profile_id) ?? 0) + 1);
-            });
-            setActivity(
-              list.map((m) => ({
-                id: m.id,
-                name: m.full_name || m.scholar_code,
-                count: counts.get(m.id) ?? 0,
-              })),
-            );
+          .from("subscriptions")
+          .select("profile_id, status")
+          .eq("status", "active")
+          .then(({ data: subs }) => {
+            const activeIds = new Set((subs ?? []).map((s: { profile_id: string }) => s.profile_id));
+            supabase
+              .from("events_attended")
+              .select("profile_id")
+              .then(({ data: att }) => {
+                const counts = new Map<string, number>();
+                (att ?? []).forEach((r: { profile_id: string }) => {
+                  counts.set(r.profile_id, (counts.get(r.profile_id) ?? 0) + 1);
+                });
+                setActivity(
+                  list
+                    .filter((m) => activeIds.has(m.id))
+                    .map((m) => ({
+                      id: m.id,
+                      name: m.full_name || m.scholar_code,
+                      count: counts.get(m.id) ?? 0,
+                    })),
+                );
+              });
           });
       });
   };
@@ -169,7 +178,7 @@ function AdminMembers() {
         <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-base font-extrabold text-[var(--brand)] flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" /> Active Members
+              <BarChart3 className="h-5 w-5" /> Active Members (approved subscriptions)
             </h3>
             <button
               onClick={() => setSortDir(sortDir === "desc" ? "asc" : "desc")}
@@ -180,7 +189,7 @@ function AdminMembers() {
             </button>
           </div>
           {activity.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No attendance data yet.</p>
+            <p className="text-xs text-muted-foreground">No members with active subscriptions yet. Treasurer or president must approve in Subscriptions.</p>
           ) : (
             (() => {
               const sorted = [...activity].sort((a, b) =>
