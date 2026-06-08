@@ -27,6 +27,8 @@ function AdminMembers() {
   const remove = useServerFn(deleteMember);
 
   const [rows, setRows] = useState<Row[]>([]);
+  const [activity, setActivity] = useState<{ id: string; name: string; count: number }[]>([]);
+  const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [form, setForm] = useState({
     scholarCode: "", password: "", fullName: "",
     email: "", phone: "", course: "", mentoringSchool: "",
