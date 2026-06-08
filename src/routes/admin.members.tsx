@@ -50,7 +50,26 @@ function AdminMembers() {
       .from("profiles")
       .select("id, full_name, scholar_code, course")
       .order("created_at", { ascending: false })
-      .then(({ data }) => setRows((data ?? []) as Row[]));
+      .then(({ data }) => {
+        const list = (data ?? []) as Row[];
+        setRows(list);
+        supabase
+          .from("events_attended")
+          .select("profile_id")
+          .then(({ data: att }) => {
+            const counts = new Map<string, number>();
+            (att ?? []).forEach((r: { profile_id: string }) => {
+              counts.set(r.profile_id, (counts.get(r.profile_id) ?? 0) + 1);
+            });
+            setActivity(
+              list.map((m) => ({
+                id: m.id,
+                name: m.full_name || m.scholar_code,
+                count: counts.get(m.id) ?? 0,
+              })),
+            );
+          });
+      });
   };
   useEffect(() => { if (isAdmin || isPresident) refresh(); }, [isAdmin, isPresident]);
 
