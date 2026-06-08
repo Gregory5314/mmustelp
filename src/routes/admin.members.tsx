@@ -54,20 +54,29 @@ function AdminMembers() {
         const list = (data ?? []) as Row[];
         setRows(list);
         supabase
-          .from("events_attended")
-          .select("profile_id")
-          .then(({ data: att }) => {
-            const counts = new Map<string, number>();
-            (att ?? []).forEach((r: { profile_id: string }) => {
-              counts.set(r.profile_id, (counts.get(r.profile_id) ?? 0) + 1);
-            });
-            setActivity(
-              list.map((m) => ({
-                id: m.id,
-                name: m.full_name || m.scholar_code,
-                count: counts.get(m.id) ?? 0,
-              })),
-            );
+          .from("subscriptions")
+          .select("profile_id, status")
+          .eq("status", "active")
+          .then(({ data: subs }) => {
+            const activeIds = new Set((subs ?? []).map((s: { profile_id: string }) => s.profile_id));
+            supabase
+              .from("events_attended")
+              .select("profile_id")
+              .then(({ data: att }) => {
+                const counts = new Map<string, number>();
+                (att ?? []).forEach((r: { profile_id: string }) => {
+                  counts.set(r.profile_id, (counts.get(r.profile_id) ?? 0) + 1);
+                });
+                setActivity(
+                  list
+                    .filter((m) => activeIds.has(m.id))
+                    .map((m) => ({
+                      id: m.id,
+                      name: m.full_name || m.scholar_code,
+                      count: counts.get(m.id) ?? 0,
+                    })),
+                );
+              });
           });
       });
   };
