@@ -123,7 +123,7 @@ function Dashboard() {
   }, [user]);
 
   return (
-    <AppLayout title="Dashboard" subtitle="Welcome back to your chapter.">
+    <AppLayout title="Dashboard" subtitle={firstName ? `Hello, ${firstName}!` : "Welcome back to your chapter."}>
       {/* 2x2 grid summary cards */}
       <section className="px-4 mt-4 grid grid-cols-2 gap-3">
         <SummaryCard
