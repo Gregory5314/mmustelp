@@ -535,7 +535,50 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_chapter_admin: {
+        Args: never
+        Returns: {
+          about: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          id: string
+          logo_url: string | null
+          motto: string | null
+          name: string
+          updated_at: string
+          updated_by: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "chapter_profile"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_my_permissions: { Args: never; Returns: string[] }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          avatar_url: string | null
+          course: string | null
+          created_at: string
+          email: string | null
+          email_opt_in: boolean
+          full_name: string
+          id: string
+          mentoring_school: string | null
+          phone: string | null
+          scholar_code: string
+          updated_at: string
+          year: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       has_permission: {
         Args: { _permission: string; _user_id: string }
         Returns: boolean
