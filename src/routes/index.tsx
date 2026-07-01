@@ -3,6 +3,8 @@ import { AppLayout } from "@/components/AppLayout";
 import { CalendarDays, MapPin, Quote, Award, CheckSquare, Trophy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,14 +47,30 @@ type R = {
 };
 
 function Dashboard() {
+  const { user } = useAuth();
+  const [firstName, setFirstName] = useState<string>("");
   const [upcoming, setUpcoming] = useState<Ev[]>([]);
   const [attendance, setAttendance] = useState<AttendanceItem[]>([]);
   const [totalAttended, setTotalAttended] = useState(0);
   const [quote, setQuote] = useState<Q | null>(null);
   const [recognition, setRecognition] = useState<R | null>(null);
 
+
   useEffect(() => {
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          const name = data?.full_name ?? user.user_metadata?.full_name ?? "Scholar";
+          setFirstName(name.trim().split(/\s+/)[0]);
+        });
+    }
+
     const nowIso = new Date().toISOString();
+
     supabase
       .from("events")
       .select("id,title,starts_at,location,description,status,photo_url")
@@ -102,10 +120,10 @@ function Dashboard() {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => setRecognition((data as R | null) ?? null));
-  }, []);
+  }, [user]);
 
   return (
-    <AppLayout title="Dashboard" subtitle="Welcome back to your chapter.">
+    <AppLayout title="Dashboard" subtitle={firstName ? `Hello, ${firstName}!` : "Welcome back to your chapter."}>
       {/* 2x2 grid summary cards */}
       <section className="px-4 mt-4 grid grid-cols-2 gap-3">
         <SummaryCard
