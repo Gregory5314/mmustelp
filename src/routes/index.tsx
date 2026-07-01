@@ -57,7 +57,20 @@ function Dashboard() {
 
 
   useEffect(() => {
+    if (user) {
+      supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          const name = data?.full_name ?? user.user_metadata?.full_name ?? "Scholar";
+          setFirstName(name.trim().split(/\s+/)[0]);
+        });
+    }
+
     const nowIso = new Date().toISOString();
+
     supabase
       .from("events")
       .select("id,title,starts_at,location,description,status,photo_url")
