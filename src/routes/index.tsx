@@ -120,7 +120,7 @@ function Dashboard() {
       .limit(1)
       .maybeSingle()
       .then(({ data }) => setRecognition((data as R | null) ?? null));
-  }, []);
+  }, [user]);
 
   return (
     <AppLayout title="Dashboard" subtitle="Welcome back to your chapter.">
