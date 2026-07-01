@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OfficialsRouteImport } from './routes/officials'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -33,6 +34,11 @@ import { Route as AdminComplaintsRouteImport } from './routes/admin.complaints'
 import { Route as AdminChapterRouteImport } from './routes/admin.chapter'
 import { Route as AdminAlumniRouteImport } from './routes/admin.alumni'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/signup': typeof SignupRoute
   '/admin/alumni': typeof AdminAlumniRoute
   '/admin/chapter': typeof AdminChapterRoute
   '/admin/complaints': typeof AdminComplaintsRoute
@@ -186,6 +193,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/signup': typeof SignupRoute
   '/admin/alumni': typeof AdminAlumniRoute
   '/admin/chapter': typeof AdminChapterRoute
   '/admin/complaints': typeof AdminComplaintsRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/officials': typeof OfficialsRoute
   '/profile': typeof ProfileRouteWithChildren
+  '/signup': typeof SignupRoute
   '/admin/alumni': typeof AdminAlumniRoute
   '/admin/chapter': typeof AdminChapterRoute
   '/admin/complaints': typeof AdminComplaintsRoute
@@ -239,6 +248,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/signup'
     | '/admin/alumni'
     | '/admin/chapter'
     | '/admin/complaints'
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/signup'
     | '/admin/alumni'
     | '/admin/chapter'
     | '/admin/complaints'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/officials'
     | '/profile'
+    | '/signup'
     | '/admin/alumni'
     | '/admin/chapter'
     | '/admin/complaints'
@@ -315,6 +327,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OfficialsRoute: typeof OfficialsRoute
   ProfileRoute: typeof ProfileRouteWithChildren
+  SignupRoute: typeof SignupRoute
   AdminAlumniRoute: typeof AdminAlumniRoute
   AdminChapterRoute: typeof AdminChapterRoute
   AdminComplaintsRoute: typeof AdminComplaintsRoute
@@ -330,6 +343,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -517,6 +537,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OfficialsRoute: OfficialsRoute,
   ProfileRoute: ProfileRouteWithChildren,
+  SignupRoute: SignupRoute,
   AdminAlumniRoute: AdminAlumniRoute,
   AdminChapterRoute: AdminChapterRoute,
   AdminComplaintsRoute: AdminComplaintsRoute,
