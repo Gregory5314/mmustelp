@@ -47,11 +47,14 @@ type R = {
 };
 
 function Dashboard() {
+  const { user } = useAuth();
+  const [firstName, setFirstName] = useState<string>("");
   const [upcoming, setUpcoming] = useState<Ev[]>([]);
   const [attendance, setAttendance] = useState<AttendanceItem[]>([]);
   const [totalAttended, setTotalAttended] = useState(0);
   const [quote, setQuote] = useState<Q | null>(null);
   const [recognition, setRecognition] = useState<R | null>(null);
+
 
   useEffect(() => {
     const nowIso = new Date().toISOString();
