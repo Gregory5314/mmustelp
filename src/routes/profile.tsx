@@ -36,8 +36,10 @@ function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()
-      .then(({ data }) => setP(data as Profile | null));
+    supabase.rpc("get_my_profile").then(({ data }) => {
+      const row = Array.isArray(data) ? data[0] : data;
+      setP((row ?? null) as Profile | null);
+    });
     supabase
       .from("events_attended")
       .select("id, title, event_date")

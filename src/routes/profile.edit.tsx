@@ -56,18 +56,23 @@ function EditProfile() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data }) => {
-      if (!data) return;
-      setFullName(data.full_name ?? "");
-      setScholarCode(data.scholar_code ?? "");
+    supabase.rpc("get_my_profile").then(({ data }) => {
+      const row = (Array.isArray(data) ? data[0] : data) as null | {
+        full_name?: string; scholar_code?: string; course?: string | null;
+        phone?: string | null; email?: string | null; mentoring_school?: string | null;
+        avatar_url?: string | null; email_opt_in?: boolean;
+      };
+      if (!row) return;
+      setFullName(row.full_name ?? "");
+      setScholarCode(row.scholar_code ?? "");
       setValues({
-        course: data.course ?? "",
-        phone: data.phone ?? "",
-        email: data.email ?? "",
-        mentoring_school: data.mentoring_school ?? "",
+        course: row.course ?? "",
+        phone: row.phone ?? "",
+        email: row.email ?? "",
+        mentoring_school: row.mentoring_school ?? "",
       });
-      setAvatarUrl(data.avatar_url ?? null);
-      setEmailOptIn(!!(data as { email_opt_in?: boolean }).email_opt_in);
+      setAvatarUrl(row.avatar_url ?? null);
+      setEmailOptIn(!!row.email_opt_in);
     });
     // Show the email toggle only if the user has at least one role other than plain "member"
     supabase.from("user_roles").select("role").eq("user_id", user.id).then(({ data }) => {

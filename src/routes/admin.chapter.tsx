@@ -29,24 +29,24 @@ function Page() {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = () =>
-    supabase
-      .from("chapter_profile")
-      .select("*")
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setId(data.id);
-          setLogoUrl(data.logo_url ?? null);
-          setForm({
-            name: data.name ?? "",
-            motto: data.motto ?? "",
-            about: data.about ?? "",
-            contact_email: data.contact_email ?? "",
-            contact_phone: data.contact_phone ?? "",
-          });
-        }
-      });
+    supabase.rpc("get_chapter_admin").then(({ data }) => {
+      const row = (Array.isArray(data) ? data[0] : data) as null | {
+        id: string; logo_url?: string | null; name?: string | null;
+        motto?: string | null; about?: string | null;
+        contact_email?: string | null; contact_phone?: string | null;
+      };
+      if (row) {
+        setId(row.id);
+        setLogoUrl(row.logo_url ?? null);
+        setForm({
+          name: row.name ?? "",
+          motto: row.motto ?? "",
+          about: row.about ?? "",
+          contact_email: row.contact_email ?? "",
+          contact_phone: row.contact_phone ?? "",
+        });
+      }
+    });
   useEffect(() => {
     load();
   }, []);
