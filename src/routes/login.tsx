@@ -2,13 +2,14 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { scholarCodeToEmail } from "@/lib/scholar";
 import logo from "@/assets/elp-logo.png";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Sign in — MMUST ELP" },
-      { name: "description", content: "Members sign in with their email and password." },
+      { name: "description", content: "Members sign in with their email or scholar code." },
     ],
   }),
   component: LoginPage,
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -30,13 +31,12 @@ function LoginPage() {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    const raw = identifier.trim();
+    const email = raw.includes("@") ? raw.toLowerCase() : scholarCodeToEmail(raw);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     setSubmitting(false);
     if (error) {
-      setError("Invalid email or password.");
+      setError("Invalid credentials.");
       return;
     }
     navigate({ to: "/", replace: true });
@@ -62,16 +62,16 @@ function LoginPage() {
           className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4"
         >
           <div>
-            <label className="text-xs font-bold tracking-wider text-muted-foreground" htmlFor="email">
-              EMAIL ADDRESS
+            <label className="text-xs font-bold tracking-wider text-muted-foreground" htmlFor="identifier">
+              EMAIL OR SCHOLAR CODE
             </label>
             <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
+              id="identifier"
+              type="text"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="you@example.com or 2018/050/14879"
+              autoComplete="username"
               required
               className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand)]"
             />
