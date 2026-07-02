@@ -17,7 +17,7 @@ const memberMenu: MenuItem[] = [
   { icon: Home, label: "Dashboard", to: "/" },
   { icon: User, label: "My Profile", to: "/profile" },
   { icon: CheckSquare, label: "Chapter Activities", to: "/activities" },
-  { icon: BarChart3, label: "Finance Overview", to: "/finance" },
+  { icon: BookOpen, label: "MMUST ELC Constitution", to: "/constitution" },
   { icon: Users, label: "Members List", to: "/members" },
   { icon: Shield, label: "Chapter Officials", to: "/officials" },
   { icon: AlertTriangle, label: "Report Complaint", to: "/complaint" },
