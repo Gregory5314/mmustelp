@@ -18,6 +18,7 @@ import { Route as MembersRouteImport } from './routes/members'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LinksRouteImport } from './routes/links'
 import { Route as FinanceRouteImport } from './routes/finance'
+import { Route as ConstitutionRouteImport } from './routes/constitution'
 import { Route as ComplaintRouteImport } from './routes/complaint'
 import { Route as ActivitiesRouteImport } from './routes/activities'
 import { Route as IndexRouteImport } from './routes/index'
@@ -77,6 +78,11 @@ const LinksRoute = LinksRouteImport.update({
 const FinanceRoute = FinanceRouteImport.update({
   id: '/finance',
   path: '/finance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConstitutionRoute = ConstitutionRouteImport.update({
+  id: '/constitution',
+  path: '/constitution',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ComplaintRoute = ComplaintRouteImport.update({
@@ -159,6 +165,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activities': typeof ActivitiesRoute
   '/complaint': typeof ComplaintRoute
+  '/constitution': typeof ConstitutionRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
   '/login': typeof LoginRoute
@@ -185,6 +192,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activities': typeof ActivitiesRoute
   '/complaint': typeof ComplaintRoute
+  '/constitution': typeof ConstitutionRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
   '/login': typeof LoginRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activities': typeof ActivitiesRoute
   '/complaint': typeof ComplaintRoute
+  '/constitution': typeof ConstitutionRoute
   '/finance': typeof FinanceRoute
   '/links': typeof LinksRoute
   '/login': typeof LoginRoute
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activities'
     | '/complaint'
+    | '/constitution'
     | '/finance'
     | '/links'
     | '/login'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activities'
     | '/complaint'
+    | '/constitution'
     | '/finance'
     | '/links'
     | '/login'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/'
     | '/activities'
     | '/complaint'
+    | '/constitution'
     | '/finance'
     | '/links'
     | '/login'
@@ -319,6 +331,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivitiesRoute: typeof ActivitiesRoute
   ComplaintRoute: typeof ComplaintRoute
+  ConstitutionRoute: typeof ConstitutionRoute
   FinanceRoute: typeof FinanceRoute
   LinksRoute: typeof LinksRoute
   LoginRoute: typeof LoginRoute
@@ -404,6 +417,13 @@ declare module '@tanstack/react-router' {
       path: '/finance'
       fullPath: '/finance'
       preLoaderRoute: typeof FinanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/constitution': {
+      id: '/constitution'
+      path: '/constitution'
+      fullPath: '/constitution'
+      preLoaderRoute: typeof ConstitutionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/complaint': {
@@ -529,6 +549,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivitiesRoute: ActivitiesRoute,
   ComplaintRoute: ComplaintRoute,
+  ConstitutionRoute: ConstitutionRoute,
   FinanceRoute: FinanceRoute,
   LinksRoute: LinksRoute,
   LoginRoute: LoginRoute,

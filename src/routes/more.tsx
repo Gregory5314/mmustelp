@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { User, CheckSquare, BarChart3, Users, Shield, AlertTriangle, ChevronRight } from "lucide-react";
+import { User, CheckSquare, BookOpen, Users, Shield, AlertTriangle, ChevronRight } from "lucide-react";
 
 export const Route = createFileRoute("/more")({
   head: () => ({ meta: [{ title: "More — MMUST ELP" }, { name: "description", content: "More options and chapter tools." }] }),
@@ -10,7 +10,7 @@ export const Route = createFileRoute("/more")({
 const items = [
   { icon: User, label: "My Profile", to: "/profile" as const },
   { icon: CheckSquare, label: "Chapter Activities", to: "/activities" as const },
-  { icon: BarChart3, label: "Finance Overview", to: "/finance" as const },
+  { icon: BookOpen, label: "MMUST ELC Constitution", to: "/constitution" as const },
   { icon: Users, label: "Members List", to: "/members" as const },
   { icon: Shield, label: "Chapter Officials", to: "/officials" as const },
   { icon: AlertTriangle, label: "Report Complaint", to: "/complaint" as const },
