@@ -1,7 +1,7 @@
 import { useState, type ReactNode, useEffect } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-  Menu, X, Home, User, CheckSquare, BarChart3, Users, Shield,
+  Menu, X, Home, User, CheckSquare, BookOpen, Users, Shield,
   AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
   Calendar, FileText, DollarSign, GraduationCap, Heart, Settings,
   Quote, Award,
