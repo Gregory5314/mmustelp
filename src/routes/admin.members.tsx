@@ -57,6 +57,13 @@ function AdminMembers() {
       .then(({ data }) => {
         const list = (data ?? []) as Row[];
         setRows(list);
+        supabase.from("user_roles").select("user_id, role").then(({ data: rs }) => {
+          const map: Record<string, string[]> = {};
+          (rs ?? []).forEach((r: { user_id: string; role: string }) => {
+            (map[r.user_id] ||= []).push(r.role);
+          });
+          setRolesMap(map);
+        });
         supabase
           .from("subscriptions")
           .select("profile_id, status")
