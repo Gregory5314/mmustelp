@@ -272,7 +272,52 @@ function AdminMembers() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-foreground truncate">{r.full_name || "—"}</p>
-                    <p className="text-xs text-muted-foreground truncate">{r.scholar_code}{r.course ? ` • ${r.course}` : ""}</p>
+                    {editCode?.id === r.id ? (
+                      <div className="flex items-center gap-1 mt-1">
+                        <input
+                          value={editCode.value}
+                          onChange={(e) => setEditCode({ id: r.id, value: e.target.value })}
+                          className="flex-1 min-w-0 rounded border border-input bg-background px-2 py-1 text-xs"
+                          placeholder="e.g. 2024/050/00001"
+                        />
+                        <button
+                          disabled={codeBusy}
+                          onClick={async () => {
+                            const val = editCode.value.trim();
+                            if (val.length < 3) return toast.error("Scholar code too short");
+                            setCodeBusy(true);
+                            try {
+                              await updateCode({ data: { userId: r.id, newScholarCode: val } });
+                              toast.success("Scholar code updated");
+                              setEditCode(null);
+                              refresh();
+                            } catch (err) {
+                              toast.error(err instanceof Error ? err.message : "Update failed");
+                            } finally { setCodeBusy(false); }
+                          }}
+                          className="p-1 text-[var(--brand)] hover:bg-accent rounded"
+                          aria-label="Save scholar code"
+                        ><Check className="h-3.5 w-3.5" /></button>
+                        <button
+                          disabled={codeBusy}
+                          onClick={() => setEditCode(null)}
+                          className="p-1 text-muted-foreground hover:bg-accent rounded"
+                          aria-label="Cancel"
+                        ><X className="h-3.5 w-3.5" /></button>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                        <span className="truncate">{r.scholar_code}{r.course ? ` • ${r.course}` : ""}</span>
+                        {isPresident && (
+                          <button
+                            onClick={() => setEditCode({ id: r.id, value: r.scholar_code })}
+                            className="p-0.5 hover:text-[var(--brand)] shrink-0"
+                            aria-label="Edit scholar code"
+                            title="Edit scholar code"
+                          ><Pencil className="h-3 w-3" /></button>
+                        )}
+                      </p>
+                    )}
                   </div>
                   {isPresident && (
                     <button
