@@ -2,11 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { useEffect, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { createMember, deleteMember, assignRole, removeRole, updateMemberScholarCode } from "@/lib/admin.functions";
+import { createMember, deleteMember, assignRole, removeRole, getMemberProfile, updateMemberProfile } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Trash2, BarChart3, ArrowUpDown, Shield, X, Pencil, Check } from "lucide-react";
+import { UserPlus, Trash2, BarChart3, ArrowUpDown, Shield, X, Pencil, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { ASSIGNABLE_ROLES, roleLabel } from "@/lib/roles";
@@ -27,9 +27,15 @@ function AdminMembers() {
   const remove = useServerFn(deleteMember);
   const assign = useServerFn(assignRole);
   const unassign = useServerFn(removeRole);
-  const updateCode = useServerFn(updateMemberScholarCode);
-  const [editCode, setEditCode] = useState<{ id: string; value: string } | null>(null);
-  const [codeBusy, setCodeBusy] = useState(false);
+  const loadProfile = useServerFn(getMemberProfile);
+  const saveProfile = useServerFn(updateMemberProfile);
+  const [editOpen, setEditOpen] = useState<Row | null>(null);
+  const [editForm, setEditForm] = useState<null | {
+    scholarCode: string; fullName: string; email: string; phone: string;
+    course: string; mentoringSchool: string; year: string;
+  }>(null);
+  const [editBusy, setEditBusy] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
   const [rows, setRows] = useState<Row[]>([]);
   const [rolesMap, setRolesMap] = useState<Record<string, string[]>>({});
@@ -272,62 +278,48 @@ function AdminMembers() {
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold text-foreground truncate">{r.full_name || "—"}</p>
-                    {editCode?.id === r.id ? (
-                      <div className="flex items-center gap-1 mt-1">
-                        <input
-                          value={editCode.value}
-                          onChange={(e) => setEditCode({ id: r.id, value: e.target.value })}
-                          className="flex-1 min-w-0 rounded border border-input bg-background px-2 py-1 text-xs"
-                          placeholder="e.g. 2024/050/00001"
-                        />
-                        <button
-                          disabled={codeBusy}
-                          onClick={async () => {
-                            const val = editCode.value.trim();
-                            if (val.length < 3) return toast.error("Scholar code too short");
-                            setCodeBusy(true);
-                            try {
-                              await updateCode({ data: { userId: r.id, newScholarCode: val } });
-                              toast.success("Scholar code updated");
-                              setEditCode(null);
-                              refresh();
-                            } catch (err) {
-                              toast.error(err instanceof Error ? err.message : "Update failed");
-                            } finally { setCodeBusy(false); }
-                          }}
-                          className="p-1 text-[var(--brand)] hover:bg-accent rounded"
-                          aria-label="Save scholar code"
-                        ><Check className="h-3.5 w-3.5" /></button>
-                        <button
-                          disabled={codeBusy}
-                          onClick={() => setEditCode(null)}
-                          className="p-1 text-muted-foreground hover:bg-accent rounded"
-                          aria-label="Cancel"
-                        ><X className="h-3.5 w-3.5" /></button>
-                      </div>
-                    ) : (
-                      <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
-                        <span className="truncate">{r.scholar_code}{r.course ? ` • ${r.course}` : ""}</span>
-                        {isPresident && (
-                          <button
-                            onClick={() => setEditCode({ id: r.id, value: r.scholar_code })}
-                            className="p-0.5 hover:text-[var(--brand)] shrink-0"
-                            aria-label="Edit scholar code"
-                            title="Edit scholar code"
-                          ><Pencil className="h-3 w-3" /></button>
-                        )}
-                      </p>
-                    )}
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.scholar_code}{r.course ? ` • ${r.course}` : ""}
+                    </p>
                   </div>
                   {isPresident && (
-                    <button
-                      onClick={() => setConfirmDel(r)}
-                      className="p-2 text-destructive hover:bg-destructive/10 rounded shrink-0"
-                      title="Delete member"
-                      aria-label={`Delete ${r.full_name}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <>
+                      <button
+                        onClick={async () => {
+                          setEditOpen(r);
+                          setEditForm(null);
+                          setEditLoading(true);
+                          try {
+                            const p = await loadProfile({ data: { userId: r.id } });
+                            setEditForm({
+                              scholarCode: p.scholar_code ?? "",
+                              fullName: p.full_name ?? "",
+                              email: p.email ?? "",
+                              phone: p.phone ?? "",
+                              course: p.course ?? "",
+                              mentoringSchool: p.mentoring_school ?? "",
+                              year: p.year != null ? String(p.year) : "",
+                            });
+                          } catch (err) {
+                            toast.error(err instanceof Error ? err.message : "Failed to load profile");
+                            setEditOpen(null);
+                          } finally { setEditLoading(false); }
+                        }}
+                        className="p-2 text-[var(--brand)] hover:bg-accent rounded shrink-0"
+                        title="Edit profile"
+                        aria-label={`Edit ${r.full_name}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => setConfirmDel(r)}
+                        className="p-2 text-destructive hover:bg-destructive/10 rounded shrink-0"
+                        title="Delete member"
+                        aria-label={`Delete ${r.full_name}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
                   )}
                 </div>
                 {isPresident && (
@@ -401,6 +393,82 @@ function AdminMembers() {
                 {deleting ? "Deleting…" : "Confirm"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {editOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center px-3 py-4 overflow-y-auto" role="dialog" aria-modal="true">
+          <div className="bg-card border border-border rounded-2xl p-4 max-w-md w-full shadow-xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-extrabold text-[var(--brand)] flex items-center gap-2">
+                <Pencil className="h-4 w-4" /> Edit Member Profile
+              </h3>
+              <button
+                onClick={() => { setEditOpen(null); setEditForm(null); }}
+                className="p-1 hover:bg-accent rounded" aria-label="Close"
+              ><X className="h-4 w-4" /></button>
+            </div>
+            {editLoading || !editForm ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">Loading profile…</p>
+            ) : (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!editForm || !editOpen) return;
+                  setEditBusy(true);
+                  try {
+                    await saveProfile({ data: {
+                      userId: editOpen.id,
+                      scholarCode: editForm.scholarCode,
+                      fullName: editForm.fullName,
+                      email: editForm.email,
+                      phone: editForm.phone,
+                      course: editForm.course,
+                      mentoringSchool: editForm.mentoringSchool,
+                      year: editForm.year ? Number(editForm.year) : null,
+                    } });
+                    toast.success("Profile updated");
+                    setEditOpen(null); setEditForm(null);
+                    refresh();
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Update failed");
+                  } finally { setEditBusy(false); }
+                }}
+                className="space-y-3"
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Scholar Code *" value={editForm.scholarCode}
+                    onChange={(v) => setEditForm({ ...editForm, scholarCode: v })} required className="col-span-2" />
+                  <Field label="Full Name *" value={editForm.fullName}
+                    onChange={(v) => setEditForm({ ...editForm, fullName: v })} required className="col-span-2" />
+                  <Field label="Email" value={editForm.email}
+                    onChange={(v) => setEditForm({ ...editForm, email: v })} type="email" />
+                  <Field label="Phone" value={editForm.phone}
+                    onChange={(v) => setEditForm({ ...editForm, phone: v })} />
+                  <Field label="Course" value={editForm.course}
+                    onChange={(v) => setEditForm({ ...editForm, course: v })} className="col-span-2" />
+                  <Field label="Mentoring School" value={editForm.mentoringSchool}
+                    onChange={(v) => setEditForm({ ...editForm, mentoringSchool: v })} className="col-span-2" />
+                  <Field label="Year (1-8)" value={editForm.year}
+                    onChange={(v) => setEditForm({ ...editForm, year: v })} type="number" />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Changing the scholar code also updates the member's sign-in credential.
+                </p>
+                <div className="flex gap-2 pt-1">
+                  <button type="button" onClick={() => { setEditOpen(null); setEditForm(null); }}
+                    disabled={editBusy}
+                    className="flex-1 bg-muted text-foreground font-bold py-2.5 rounded-lg hover:bg-accent disabled:opacity-60">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={editBusy}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[var(--brand)] text-brand-foreground font-bold py-2.5 rounded-lg shadow hover:bg-[var(--brand-deep)] disabled:opacity-60">
+                    <Save className="h-4 w-4" /> {editBusy ? "Saving…" : "Save"}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}
