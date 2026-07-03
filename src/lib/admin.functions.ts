@@ -140,6 +140,26 @@ export const removeRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateMemberScholarCode = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    userId: z.string().uuid(),
+    newScholarCode: z.string().trim().min(3).max(64),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertPermission(context.userId, "admins.manage");
+    const newEmail = scholarCodeToEmail(data.newScholarCode);
+    const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      email: newEmail, email_confirm: true,
+      user_metadata: { scholar_code: data.newScholarCode },
+    });
+    if (authErr) throw new Error(authErr.message);
+    const { error: profErr } = await supabaseAdmin.from("profiles")
+      .update({ scholar_code: data.newScholarCode }).eq("id", data.userId);
+    if (profErr) throw new Error(profErr.message);
+    return { ok: true };
+  });
+
 export const deleteMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ userId: z.string().uuid() }).parse(input))
