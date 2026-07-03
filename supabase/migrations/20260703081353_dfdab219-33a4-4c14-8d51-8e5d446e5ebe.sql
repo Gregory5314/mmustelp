@@ -1,0 +1,1 @@
+CREATE POLICY "admins.manage read all roles" ON public.user_roles FOR SELECT USING (public.has_permission(auth.uid(), 'admins.manage'));

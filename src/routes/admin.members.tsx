@@ -2,11 +2,11 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
 import { useEffect, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { createMember, deleteMember } from "@/lib/admin.functions";
+import { createMember, deleteMember, assignRole, removeRole } from "@/lib/admin.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { usePermissions } from "@/hooks/use-permissions";
 import { supabase } from "@/integrations/supabase/client";
-import { UserPlus, Trash2, BarChart3, ArrowUpDown } from "lucide-react";
+import { UserPlus, Trash2, BarChart3, ArrowUpDown, Shield, X } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { ASSIGNABLE_ROLES, roleLabel } from "@/lib/roles";
@@ -25,8 +25,12 @@ function AdminMembers() {
   const navigate = useNavigate();
   const create = useServerFn(createMember);
   const remove = useServerFn(deleteMember);
+  const assign = useServerFn(assignRole);
+  const unassign = useServerFn(removeRole);
 
   const [rows, setRows] = useState<Row[]>([]);
+  const [rolesMap, setRolesMap] = useState<Record<string, string[]>>({});
+  const [roleBusy, setRoleBusy] = useState<string | null>(null);
   const [activity, setActivity] = useState<{ id: string; name: string; count: number }[]>([]);
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [form, setForm] = useState({
@@ -53,6 +57,13 @@ function AdminMembers() {
       .then(({ data }) => {
         const list = (data ?? []) as Row[];
         setRows(list);
+        supabase.from("user_roles").select("user_id, role").then(({ data: rs }) => {
+          const map: Record<string, string[]> = {};
+          (rs ?? []).forEach((r: { user_id: string; role: string }) => {
+            (map[r.user_id] ||= []).push(r.role);
+          });
+          setRolesMap(map);
+        });
         supabase
           .from("subscriptions")
           .select("profile_id, status")
@@ -226,26 +237,94 @@ function AdminMembers() {
       <section className="px-4 mt-6 pb-6">
         <h3 className="text-base font-extrabold text-[var(--brand)] mb-2">All Members ({rows.length})</h3>
         <div className="space-y-2">
-          {rows.map((r) => (
-            <div key={r.id} className="bg-card border border-border rounded-xl px-3 py-2.5 flex items-center justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-bold text-foreground truncate">{r.full_name || "—"}</p>
-                <p className="text-xs text-muted-foreground truncate">{r.scholar_code}{r.course ? ` • ${r.course}` : ""}</p>
+          {rows.map((r) => {
+            const memberRoles = rolesMap[r.id] ?? [];
+            const available = ASSIGNABLE_ROLES.filter((x) => !memberRoles.includes(x));
+            const doAssign = async (role: string) => {
+              setRoleBusy(r.id);
+              try {
+                await assign({ data: { userId: r.id, role } });
+                setRolesMap((m) => ({ ...m, [r.id]: [...(m[r.id] ?? []), role] }));
+                toast.success(`Assigned ${roleLabel(role)} to ${r.full_name}`);
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Failed to assign role");
+              } finally {
+                setRoleBusy(null);
+              }
+            };
+            const doRemoveRole = async (role: string) => {
+              setRoleBusy(r.id);
+              try {
+                await unassign({ data: { userId: r.id, role } });
+                setRolesMap((m) => ({ ...m, [r.id]: (m[r.id] ?? []).filter((x) => x !== role) }));
+                toast.success(`Removed ${roleLabel(role)} from ${r.full_name}`);
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Failed to remove role");
+              } finally {
+                setRoleBusy(null);
+              }
+            };
+            return (
+              <div key={r.id} className="bg-card border border-border rounded-xl px-3 py-2.5 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-foreground truncate">{r.full_name || "—"}</p>
+                    <p className="text-xs text-muted-foreground truncate">{r.scholar_code}{r.course ? ` • ${r.course}` : ""}</p>
+                  </div>
+                  {isPresident && (
+                    <button
+                      onClick={() => setConfirmDel(r)}
+                      className="p-2 text-destructive hover:bg-destructive/10 rounded shrink-0"
+                      title="Delete member"
+                      aria-label={`Delete ${r.full_name}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+                {isPresident && (
+                  <div className="pt-2 border-t border-border/60 space-y-2">
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <Shield className="h-3 w-3 text-[var(--brand-accent)]" />
+                      {memberRoles.length === 0 ? (
+                        <span className="text-[11px] text-muted-foreground">No roles</span>
+                      ) : (
+                        memberRoles.map((role) => (
+                          <span key={role} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent text-[10px] font-bold text-foreground">
+                            {roleLabel(role)}
+                            <button
+                              onClick={() => doRemoveRole(role)}
+                              disabled={roleBusy === r.id}
+                              className="hover:text-destructive disabled:opacity-40"
+                              aria-label={`Remove ${roleLabel(role)}`}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))
+                      )}
+                    </div>
+                    {available.length > 0 && (
+                      <select
+                        value=""
+                        disabled={roleBusy === r.id}
+                        onChange={(e) => { if (e.target.value) doAssign(e.target.value); }}
+                        className="w-full rounded-lg border border-input bg-background px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand)] disabled:opacity-60"
+                      >
+                        <option value="">+ Assign a role…</option>
+                        {available.map((role) => (
+                          <option key={role} value={role}>{roleLabel(role)}</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
               </div>
-              {isPresident && (
-                <button
-                  onClick={() => setConfirmDel(r)}
-                  className="p-2 text-destructive hover:bg-destructive/10 rounded shrink-0"
-                  title="Delete member"
-                  aria-label={`Delete ${r.full_name}`}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
+
 
       {confirmDel && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4" role="dialog" aria-modal="true">
