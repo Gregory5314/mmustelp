@@ -396,6 +396,82 @@ function AdminMembers() {
           </div>
         </div>
       )}
+
+      {editOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center px-3 py-4 overflow-y-auto" role="dialog" aria-modal="true">
+          <div className="bg-card border border-border rounded-2xl p-4 max-w-md w-full shadow-xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-extrabold text-[var(--brand)] flex items-center gap-2">
+                <Pencil className="h-4 w-4" /> Edit Member Profile
+              </h3>
+              <button
+                onClick={() => { setEditOpen(null); setEditForm(null); }}
+                className="p-1 hover:bg-accent rounded" aria-label="Close"
+              ><X className="h-4 w-4" /></button>
+            </div>
+            {editLoading || !editForm ? (
+              <p className="text-sm text-muted-foreground py-8 text-center">Loading profile…</p>
+            ) : (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!editForm || !editOpen) return;
+                  setEditBusy(true);
+                  try {
+                    await saveProfile({ data: {
+                      userId: editOpen.id,
+                      scholarCode: editForm.scholarCode,
+                      fullName: editForm.fullName,
+                      email: editForm.email,
+                      phone: editForm.phone,
+                      course: editForm.course,
+                      mentoringSchool: editForm.mentoringSchool,
+                      year: editForm.year ? Number(editForm.year) : null,
+                    } });
+                    toast.success("Profile updated");
+                    setEditOpen(null); setEditForm(null);
+                    refresh();
+                  } catch (err) {
+                    toast.error(err instanceof Error ? err.message : "Update failed");
+                  } finally { setEditBusy(false); }
+                }}
+                className="space-y-3"
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Scholar Code *" value={editForm.scholarCode}
+                    onChange={(v) => setEditForm({ ...editForm, scholarCode: v })} required className="col-span-2" />
+                  <Field label="Full Name *" value={editForm.fullName}
+                    onChange={(v) => setEditForm({ ...editForm, fullName: v })} required className="col-span-2" />
+                  <Field label="Email" value={editForm.email}
+                    onChange={(v) => setEditForm({ ...editForm, email: v })} type="email" />
+                  <Field label="Phone" value={editForm.phone}
+                    onChange={(v) => setEditForm({ ...editForm, phone: v })} />
+                  <Field label="Course" value={editForm.course}
+                    onChange={(v) => setEditForm({ ...editForm, course: v })} className="col-span-2" />
+                  <Field label="Mentoring School" value={editForm.mentoringSchool}
+                    onChange={(v) => setEditForm({ ...editForm, mentoringSchool: v })} className="col-span-2" />
+                  <Field label="Year (1-8)" value={editForm.year}
+                    onChange={(v) => setEditForm({ ...editForm, year: v })} type="number" />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Changing the scholar code also updates the member's sign-in credential.
+                </p>
+                <div className="flex gap-2 pt-1">
+                  <button type="button" onClick={() => { setEditOpen(null); setEditForm(null); }}
+                    disabled={editBusy}
+                    className="flex-1 bg-muted text-foreground font-bold py-2.5 rounded-lg hover:bg-accent disabled:opacity-60">
+                    Cancel
+                  </button>
+                  <button type="submit" disabled={editBusy}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[var(--brand)] text-brand-foreground font-bold py-2.5 rounded-lg shadow hover:bg-[var(--brand-deep)] disabled:opacity-60">
+                    <Save className="h-4 w-4" /> {editBusy ? "Saving…" : "Save"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }
