@@ -27,9 +27,15 @@ function AdminMembers() {
   const remove = useServerFn(deleteMember);
   const assign = useServerFn(assignRole);
   const unassign = useServerFn(removeRole);
-  const updateCode = useServerFn(updateMemberScholarCode);
-  const [editCode, setEditCode] = useState<{ id: string; value: string } | null>(null);
-  const [codeBusy, setCodeBusy] = useState(false);
+  const loadProfile = useServerFn(getMemberProfile);
+  const saveProfile = useServerFn(updateMemberProfile);
+  const [editOpen, setEditOpen] = useState<Row | null>(null);
+  const [editForm, setEditForm] = useState<null | {
+    scholarCode: string; fullName: string; email: string; phone: string;
+    course: string; mentoringSchool: string; year: string;
+  }>(null);
+  const [editBusy, setEditBusy] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
   const [rows, setRows] = useState<Row[]>([]);
   const [rolesMap, setRolesMap] = useState<Record<string, string[]>>({});
