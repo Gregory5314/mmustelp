@@ -160,6 +160,61 @@ export const updateMemberScholarCode = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const getMemberProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ userId: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertPermission(context.userId, "admins.manage");
+    const { data: p, error } = await supabaseAdmin
+      .from("profiles")
+      .select("id, full_name, scholar_code, email, phone, course, mentoring_school, year")
+      .eq("id", data.userId).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!p) throw new Error("Member not found");
+    return p;
+  });
+
+export const updateMemberProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({
+    userId: z.string().uuid(),
+    scholarCode: z.string().trim().min(3).max(64),
+    fullName: z.string().trim().min(1).max(120),
+    email: z.string().trim().email().max(255).optional().or(z.literal("")),
+    phone: z.string().trim().max(40).optional().or(z.literal("")),
+    course: z.string().trim().max(160).optional().or(z.literal("")),
+    mentoringSchool: z.string().trim().max(160).optional().or(z.literal("")),
+    year: z.number().int().min(1).max(8).nullable().optional(),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertPermission(context.userId, "admins.manage");
+
+    // Fetch existing scholar code to know whether auth email needs updating
+    const { data: existing } = await supabaseAdmin
+      .from("profiles").select("scholar_code").eq("id", data.userId).maybeSingle();
+
+    if (existing && existing.scholar_code !== data.scholarCode) {
+      const newEmail = scholarCodeToEmail(data.scholarCode);
+      const { error: authErr } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+        email: newEmail, email_confirm: true,
+        user_metadata: { scholar_code: data.scholarCode, full_name: data.fullName },
+      });
+      if (authErr) throw new Error(authErr.message);
+    }
+
+    const { error: profErr } = await supabaseAdmin.from("profiles").update({
+      scholar_code: data.scholarCode,
+      full_name: data.fullName,
+      email: data.email || null,
+      phone: data.phone || null,
+      course: data.course || null,
+      mentoring_school: data.mentoringSchool || null,
+      year: data.year ?? null,
+    }).eq("id", data.userId);
+    if (profErr) throw new Error(profErr.message);
+    return { ok: true };
+  });
+
 export const deleteMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ userId: z.string().uuid() }).parse(input))
