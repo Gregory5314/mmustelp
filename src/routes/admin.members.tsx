@@ -25,8 +25,12 @@ function AdminMembers() {
   const navigate = useNavigate();
   const create = useServerFn(createMember);
   const remove = useServerFn(deleteMember);
+  const assign = useServerFn(assignRole);
+  const unassign = useServerFn(removeRole);
 
   const [rows, setRows] = useState<Row[]>([]);
+  const [rolesMap, setRolesMap] = useState<Record<string, string[]>>({});
+  const [roleBusy, setRoleBusy] = useState<string | null>(null);
   const [activity, setActivity] = useState<{ id: string; name: string; count: number }[]>([]);
   const [sortDir, setSortDir] = useState<"desc" | "asc">("desc");
   const [form, setForm] = useState({
