@@ -4,7 +4,7 @@ import {
   Menu, X, Home, User, CheckSquare, BookOpen, Users, Shield,
   AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
   Calendar, FileText, DollarSign, GraduationCap, Heart, Settings,
-  Quote, Award,
+  Quote, Award, Image as ImageIcon,
 } from "lucide-react";
 import defaultLogo from "@/assets/elp-logo.png";
 import { useAuth } from "@/hooks/use-auth";

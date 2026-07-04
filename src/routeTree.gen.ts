@@ -17,6 +17,7 @@ import { Route as MoreRouteImport } from './routes/more'
 import { Route as MembersRouteImport } from './routes/members'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LinksRouteImport } from './routes/links'
+import { Route as GalleryRouteImport } from './routes/gallery'
 import { Route as FinanceRouteImport } from './routes/finance'
 import { Route as ConstitutionRouteImport } from './routes/constitution'
 import { Route as ComplaintRouteImport } from './routes/complaint'
@@ -73,6 +74,11 @@ const LoginRoute = LoginRouteImport.update({
 const LinksRoute = LinksRouteImport.update({
   id: '/links',
   path: '/links',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalleryRoute = GalleryRouteImport.update({
+  id: '/gallery',
+  path: '/gallery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FinanceRoute = FinanceRouteImport.update({
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/complaint': typeof ComplaintRoute
   '/constitution': typeof ConstitutionRoute
   '/finance': typeof FinanceRoute
+  '/gallery': typeof GalleryRoute
   '/links': typeof LinksRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/complaint': typeof ComplaintRoute
   '/constitution': typeof ConstitutionRoute
   '/finance': typeof FinanceRoute
+  '/gallery': typeof GalleryRoute
   '/links': typeof LinksRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
@@ -222,6 +230,7 @@ export interface FileRoutesById {
   '/complaint': typeof ComplaintRoute
   '/constitution': typeof ConstitutionRoute
   '/finance': typeof FinanceRoute
+  '/gallery': typeof GalleryRoute
   '/links': typeof LinksRoute
   '/login': typeof LoginRoute
   '/members': typeof MembersRoute
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/constitution'
     | '/finance'
+    | '/gallery'
     | '/links'
     | '/login'
     | '/members'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/constitution'
     | '/finance'
+    | '/gallery'
     | '/links'
     | '/login'
     | '/members'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/complaint'
     | '/constitution'
     | '/finance'
+    | '/gallery'
     | '/links'
     | '/login'
     | '/members'
@@ -333,6 +345,7 @@ export interface RootRouteChildren {
   ComplaintRoute: typeof ComplaintRoute
   ConstitutionRoute: typeof ConstitutionRoute
   FinanceRoute: typeof FinanceRoute
+  GalleryRoute: typeof GalleryRoute
   LinksRoute: typeof LinksRoute
   LoginRoute: typeof LoginRoute
   MembersRoute: typeof MembersRoute
@@ -410,6 +423,13 @@ declare module '@tanstack/react-router' {
       path: '/links'
       fullPath: '/links'
       preLoaderRoute: typeof LinksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gallery': {
+      id: '/gallery'
+      path: '/gallery'
+      fullPath: '/gallery'
+      preLoaderRoute: typeof GalleryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/finance': {
@@ -551,6 +571,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComplaintRoute: ComplaintRoute,
   ConstitutionRoute: ConstitutionRoute,
   FinanceRoute: FinanceRoute,
+  GalleryRoute: GalleryRoute,
   LinksRoute: LinksRoute,
   LoginRoute: LoginRoute,
   MembersRoute: MembersRoute,
