@@ -20,6 +20,7 @@ const memberMenu: MenuItem[] = [
   { icon: BookOpen, label: "MMUST ELC Constitution", to: "/constitution" },
   { icon: Users, label: "Members List", to: "/members" },
   { icon: Shield, label: "Chapter Officials", to: "/officials" },
+  { icon: ImageIcon, label: "Photo Gallery", to: "/gallery" },
   { icon: AlertTriangle, label: "Report Complaint", to: "/complaint" },
 ];
 
