@@ -253,6 +253,45 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_photos: {
+        Row: {
+          caption: string | null
+          content_type: string | null
+          created_at: string
+          file_name: string | null
+          id: string
+          public_url: string
+          size_bytes: number | null
+          storage_path: string
+          taken_at: string
+          uploader_id: string
+        }
+        Insert: {
+          caption?: string | null
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          public_url: string
+          size_bytes?: number | null
+          storage_path: string
+          taken_at?: string
+          uploader_id: string
+        }
+        Update: {
+          caption?: string | null
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          public_url?: string
+          size_bytes?: number | null
+          storage_path?: string
+          taken_at?: string
+          uploader_id?: string
+        }
+        Relationships: []
+      }
       meeting_reports: {
         Row: {
           created_at: string
