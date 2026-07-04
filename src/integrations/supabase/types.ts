@@ -292,6 +292,30 @@ export type Database = {
         }
         Relationships: []
       }
+      link_images: {
+        Row: {
+          image_url: string
+          link_key: string
+          storage_path: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          image_url: string
+          link_key: string
+          storage_path?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          image_url?: string
+          link_key?: string
+          storage_path?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       meeting_reports: {
         Row: {
           created_at: string
