@@ -4,7 +4,7 @@ import {
   Menu, X, Home, User, CheckSquare, BookOpen, Users, Shield,
   AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
   Calendar, FileText, DollarSign, GraduationCap, Heart, Settings,
-  Quote, Award,
+  Quote, Award, Image as ImageIcon,
 } from "lucide-react";
 import defaultLogo from "@/assets/elp-logo.png";
 import { useAuth } from "@/hooks/use-auth";
@@ -20,6 +20,7 @@ const memberMenu: MenuItem[] = [
   { icon: BookOpen, label: "MMUST ELC Constitution", to: "/constitution" },
   { icon: Users, label: "Members List", to: "/members" },
   { icon: Shield, label: "Chapter Officials", to: "/officials" },
+  { icon: ImageIcon, label: "Photo Gallery", to: "/gallery" },
   { icon: AlertTriangle, label: "Report Complaint", to: "/complaint" },
 ];
 
