@@ -13,6 +13,7 @@ const items = [
   { icon: BookOpen, label: "MMUST ELC Constitution", to: "/constitution" as const },
   { icon: Users, label: "Members List", to: "/members" as const },
   { icon: Shield, label: "Chapter Officials", to: "/officials" as const },
+  { icon: ImageIcon, label: "Photo Gallery", to: "/gallery" as const },
   { icon: AlertTriangle, label: "Report Complaint", to: "/complaint" as const },
 ];
 
