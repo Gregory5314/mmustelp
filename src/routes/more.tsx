@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppLayout } from "@/components/AppLayout";
-import { User, CheckSquare, BookOpen, Users, Shield, AlertTriangle, ChevronRight } from "lucide-react";
+import { User, CheckSquare, BookOpen, Users, Shield, AlertTriangle, ChevronRight, Image as ImageIcon } from "lucide-react";
 
 export const Route = createFileRoute("/more")({
   head: () => ({ meta: [{ title: "More — MMUST ELP" }, { name: "description", content: "More options and chapter tools." }] }),
