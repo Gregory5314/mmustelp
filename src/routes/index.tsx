@@ -164,9 +164,11 @@ function Dashboard() {
         ) : (
           <div className="space-y-2">
             {attendance.map((m) => (
-              <div
+              <Link
+                to="/members"
+                hash={m.profile_id}
                 key={m.profile_id}
-                className="bg-card border border-border rounded-xl p-3 flex items-center gap-3"
+                className="bg-card border border-border rounded-xl p-3 flex items-center gap-3 hover:bg-accent/40 active:scale-[0.99] transition"
               >
                 {m.avatar_url ? (
                   <img
@@ -186,7 +188,7 @@ function Dashboard() {
                   </p>
                 </div>
                 <span className="text-xl font-extrabold text-[var(--brand-accent)]">{m.count}</span>
-              </div>
+              </Link>
             ))}
           </div>
         )}
