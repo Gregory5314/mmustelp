@@ -48,6 +48,7 @@ const bottomNav = [
 export function AppLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const router = useRouter();
   const { user, isLoading, signOut } = useAuth();
   const { has, hasAny } = usePermissions();
   const [memberCount, setMemberCount] = useState<number | null>(null);
@@ -55,9 +56,44 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
   const [chapterLogo, setChapterLogo] = useState<string | null>(null);
   const [chapterName, setChapterName] = useState<string>("MMUST ELP");
 
+  // Pull-to-refresh
+  const [pullY, setPullY] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+  const THRESHOLD = 70;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY <= 0 && !refreshing) {
+      touchStartY.current = e.touches[0].clientY;
+    } else {
+      touchStartY.current = null;
+    }
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current == null) return;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (dy > 0) setPullY(Math.min(dy * 0.5, 100));
+  };
+  const onTouchEnd = async () => {
+    if (touchStartY.current == null) return;
+    touchStartY.current = null;
+    if (pullY >= THRESHOLD) {
+      setRefreshing(true);
+      setPullY(50);
+      try {
+        await router.invalidate();
+      } finally {
+        setTimeout(() => { setRefreshing(false); setPullY(0); }, 400);
+      }
+    } else {
+      setPullY(0);
+    }
+  };
+
   useEffect(() => {
     if (!isLoading && !user) navigate({ to: "/login", replace: true });
   }, [user, isLoading, navigate]);
+
 
   useEffect(() => {
     if (!user) return;
