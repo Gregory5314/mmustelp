@@ -1,10 +1,10 @@
-import { useState, type ReactNode, useEffect } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useState, type ReactNode, useEffect, useRef } from "react";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   Menu, X, Home, User, CheckSquare, BookOpen, Users, Shield,
   AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
   Calendar, FileText, DollarSign, GraduationCap, Heart, Settings,
-  Quote, Award, Image as ImageIcon,
+  Quote, Award, Image as ImageIcon, RefreshCw,
 } from "lucide-react";
 import defaultLogo from "@/assets/elp-logo.png";
 import { useAuth } from "@/hooks/use-auth";
