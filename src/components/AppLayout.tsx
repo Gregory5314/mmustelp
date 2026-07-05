@@ -1,10 +1,10 @@
-import { useState, type ReactNode, useEffect } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { useState, type ReactNode, useEffect, useRef } from "react";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import {
   Menu, X, Home, User, CheckSquare, BookOpen, Users, Shield,
   AlertTriangle, Link2, Bell, MoreHorizontal, UserPlus, LogOut,
   Calendar, FileText, DollarSign, GraduationCap, Heart, Settings,
-  Quote, Award, Image as ImageIcon,
+  Quote, Award, Image as ImageIcon, RefreshCw,
 } from "lucide-react";
 import defaultLogo from "@/assets/elp-logo.png";
 import { useAuth } from "@/hooks/use-auth";
@@ -48,6 +48,7 @@ const bottomNav = [
 export function AppLayout({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const router = useRouter();
   const { user, isLoading, signOut } = useAuth();
   const { has, hasAny } = usePermissions();
   const [memberCount, setMemberCount] = useState<number | null>(null);
@@ -55,9 +56,44 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
   const [chapterLogo, setChapterLogo] = useState<string | null>(null);
   const [chapterName, setChapterName] = useState<string>("MMUST ELP");
 
+  // Pull-to-refresh
+  const [pullY, setPullY] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+  const THRESHOLD = 70;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    if (window.scrollY <= 0 && !refreshing) {
+      touchStartY.current = e.touches[0].clientY;
+    } else {
+      touchStartY.current = null;
+    }
+  };
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (touchStartY.current == null) return;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (dy > 0) setPullY(Math.min(dy * 0.5, 100));
+  };
+  const onTouchEnd = async () => {
+    if (touchStartY.current == null) return;
+    touchStartY.current = null;
+    if (pullY >= THRESHOLD) {
+      setRefreshing(true);
+      setPullY(50);
+      try {
+        await router.invalidate();
+      } finally {
+        setTimeout(() => { setRefreshing(false); setPullY(0); }, 400);
+      }
+    } else {
+      setPullY(0);
+    }
+  };
+
   useEffect(() => {
     if (!isLoading && !user) navigate({ to: "/login", replace: true });
   }, [user, isLoading, navigate]);
+
 
   useEffect(() => {
     if (!user) return;
@@ -105,9 +141,24 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div
+      className="min-h-screen bg-background pb-24"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      style={{ transform: pullY ? `translateY(${pullY}px)` : undefined, transition: touchStartY.current ? "none" : "transform 200ms ease" }}
+    >
+      {(pullY > 0 || refreshing) && (
+        <div
+          className="fixed top-2 left-1/2 -translate-x-1/2 z-40 bg-card border border-border rounded-full shadow-md px-3 py-1.5 flex items-center gap-2 text-xs font-semibold text-[var(--brand)]"
+          style={{ opacity: Math.min(pullY / THRESHOLD, 1) }}
+        >
+          <RefreshCw className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`} style={{ transform: refreshing ? undefined : `rotate(${pullY * 3}deg)` }} />
+          {refreshing ? "Refreshing…" : pullY >= THRESHOLD ? "Release to refresh" : "Pull to refresh"}
+        </div>
+      )}
       <header className="bg-[var(--brand)] text-brand-foreground px-4 pt-3 pb-4 rounded-b-2xl shadow-md">
-        <div className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3 -m-1 p-1 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors" aria-label="Go to dashboard">
           <img src={chapterLogo ?? defaultLogo} alt={`${chapterName} crest`} width={48} height={48}
                className="h-12 w-12 rounded-full bg-white p-0.5 object-contain" />
           <div className="flex-1 min-w-0">
@@ -118,8 +169,9 @@ export function AppLayout({ title, subtitle, children }: { title: string; subtit
             <User className="h-4 w-4" />
             <span>{memberCount ?? "—"} Members</span>
           </div>
-        </div>
+        </Link>
       </header>
+
 
       <div className="sticky top-0 z-30 px-4 pt-4 pb-2 bg-background">
         <div className="flex items-center gap-3">

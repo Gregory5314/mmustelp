@@ -127,30 +127,35 @@ function Dashboard() {
       {/* 2x2 grid summary cards */}
       <section className="px-4 mt-4 grid grid-cols-2 gap-3">
         <SummaryCard
+          to="/activities"
           icon={CheckSquare}
           label="Events Attended"
           value={String(totalAttended)}
           sub={`${attendance.length} active members`}
         />
         <SummaryCard
+          to="/more"
           icon={Quote}
           label="Quote of the Week"
           value={quote ? quote.scholar_name : "—"}
           sub={quote ? "Tap to read" : "Not set"}
         />
         <SummaryCard
+          to="/activities"
           icon={CalendarDays}
           label="Upcoming Events"
           value={String(upcoming.length)}
           sub="Next 5 scheduled"
         />
         <SummaryCard
+          to="/more"
           icon={Trophy}
           label="Scholar of the Month"
           value={recognition ? recognition.scholar_name : "—"}
           sub={recognition?.recognition_type ?? "Not set"}
         />
       </section>
+
 
       {/* Events Attended */}
       <Section icon={CheckSquare} title="Events Attended">
@@ -159,9 +164,11 @@ function Dashboard() {
         ) : (
           <div className="space-y-2">
             {attendance.map((m) => (
-              <div
+              <Link
+                to="/members"
+                hash={m.profile_id}
                 key={m.profile_id}
-                className="bg-card border border-border rounded-xl p-3 flex items-center gap-3"
+                className="bg-card border border-border rounded-xl p-3 flex items-center gap-3 hover:bg-accent/40 active:scale-[0.99] transition"
               >
                 {m.avatar_url ? (
                   <img
@@ -181,7 +188,7 @@ function Dashboard() {
                   </p>
                 </div>
                 <span className="text-xl font-extrabold text-[var(--brand-accent)]">{m.count}</span>
-              </div>
+              </Link>
             ))}
           </div>
         )}
@@ -229,9 +236,11 @@ function Dashboard() {
         ) : (
           <div className="space-y-3">
             {upcoming.map((ev) => (
-              <article
+              <Link
+                to="/activities"
+                hash={ev.id}
                 key={ev.id}
-                className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm"
+                className="block bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md active:scale-[0.995] transition"
               >
                 <div className="aspect-[16/9] bg-muted relative">
                   {ev.photo_url ? (
@@ -259,7 +268,7 @@ function Dashboard() {
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ev.description}</p>
                   )}
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         )}
@@ -323,21 +332,26 @@ function SummaryCard({
   label,
   value,
   sub,
+  to,
 }: {
   icon: any;
   label: string;
   value: string;
   sub?: string;
+  to?: string;
 }) {
-  return (
-    <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+  const body = (
+    <>
       <Icon className="h-6 w-6 text-[var(--brand-accent)]" />
       <p className="text-[10px] font-bold tracking-wider text-muted-foreground mt-3 uppercase">{label}</p>
       <p className="text-lg font-extrabold text-[var(--brand)] leading-tight truncate">{value}</p>
       {sub && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
-    </div>
+    </>
   );
+  const cls = "bg-card border border-border rounded-2xl p-4 shadow-sm block hover:bg-accent/40 active:scale-[0.98] transition";
+  return to ? <Link to={to as any} className={cls}>{body}</Link> : <div className={cls}>{body}</div>;
 }
+
 
 function Section({
   icon: Icon,
