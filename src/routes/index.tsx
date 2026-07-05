@@ -328,21 +328,26 @@ function SummaryCard({
   label,
   value,
   sub,
+  to,
 }: {
   icon: any;
   label: string;
   value: string;
   sub?: string;
+  to?: string;
 }) {
-  return (
-    <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+  const body = (
+    <>
       <Icon className="h-6 w-6 text-[var(--brand-accent)]" />
       <p className="text-[10px] font-bold tracking-wider text-muted-foreground mt-3 uppercase">{label}</p>
       <p className="text-lg font-extrabold text-[var(--brand)] leading-tight truncate">{value}</p>
       {sub && <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
-    </div>
+    </>
   );
+  const cls = "bg-card border border-border rounded-2xl p-4 shadow-sm block hover:bg-accent/40 active:scale-[0.98] transition";
+  return to ? <Link to={to as any} className={cls}>{body}</Link> : <div className={cls}>{body}</div>;
 }
+
 
 function Section({
   icon: Icon,
