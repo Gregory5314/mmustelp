@@ -234,9 +234,11 @@ function Dashboard() {
         ) : (
           <div className="space-y-3">
             {upcoming.map((ev) => (
-              <article
+              <Link
+                to="/activities"
+                hash={ev.id}
                 key={ev.id}
-                className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm"
+                className="block bg-card border border-border rounded-2xl overflow-hidden shadow-sm hover:shadow-md active:scale-[0.995] transition"
               >
                 <div className="aspect-[16/9] bg-muted relative">
                   {ev.photo_url ? (
@@ -264,7 +266,7 @@ function Dashboard() {
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{ev.description}</p>
                   )}
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         )}
