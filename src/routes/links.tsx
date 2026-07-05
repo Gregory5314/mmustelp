@@ -1,10 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { ExternalLink, Upload, Loader2, ImagePlus } from "lucide-react";
+import { ExternalLink, Upload, Loader2, ImagePlus, Crop as CropIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import Cropper, { type Area } from "react-easy-crop";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 
 export const Route = createFileRoute("/links")({
   head: () => ({ meta: [{ title: "Links — MMUST ELP" }, { name: "description", content: "Useful links and resources." }] }),
@@ -16,7 +20,7 @@ type LinkItem = {
   label: string;
   href?: string;
   to?: "/activities" | "/members" | "/officials";
-  fallback: string; // gradient fallback color pair
+  fallback: string;
 };
 
 const links: LinkItem[] = [
@@ -30,12 +34,40 @@ const links: LinkItem[] = [
 ];
 
 const BUCKET = "event_photos";
+const ASPECT = 3 / 2;
+
+async function getCroppedBlob(imageSrc: string, crop: Area, mime: string): Promise<Blob> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.crossOrigin = "anonymous";
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = imageSrc;
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(crop.width);
+  canvas.height = Math.round(crop.height);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Crop failed"))), mime, 0.92),
+  );
+}
 
 function Links() {
   const { isAdmin } = useAuth();
   const [images, setImages] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<string | null>(null);
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Cropper state
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropKey, setCropKey] = useState<string | null>(null);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropMime, setCropMime] = useState<string>("image/jpeg");
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
 
   const load = async () => {
     const { data } = await (supabase as any).from("link_images").select("link_key,image_url");
@@ -48,30 +80,51 @@ function Links() {
 
   const pick = (key: string) => fileRefs.current[key]?.click();
 
-  const onFile = async (key: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const onCropComplete = useCallback((_: Area, pixels: Area) => setCroppedArea(pixels), []);
+
+  const onFile = (key: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
     if (!f.type.startsWith("image/")) { toast.error("Please choose an image"); return; }
-    setUploading(key);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropMime(f.type);
+      setCropKey(key);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setCroppedArea(null);
+      setCropOpen(true);
+    };
+    reader.readAsDataURL(f);
+  };
+
+  const confirmCrop = async () => {
+    if (!cropKey || !cropSrc || !croppedArea) return;
+    setUploading(cropKey);
+    setCropOpen(false);
     try {
-      const ext = f.name.split(".").pop() || "jpg";
-      const path = `links/${key}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, f, {
-        cacheControl: "31536000", upsert: true, contentType: f.type,
+      const blob = await getCroppedBlob(cropSrc, croppedArea, cropMime);
+      const ext = (cropMime.split("/")[1] || "jpg").replace("jpeg", "jpg");
+      const path = `links/${cropKey}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, blob, {
+        cacheControl: "31536000", upsert: true, contentType: cropMime,
       });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
       const { error: dbErr } = await (supabase as any)
         .from("link_images")
-        .upsert({ link_key: key, image_url: pub.publicUrl, storage_path: path }, { onConflict: "link_key" });
+        .upsert({ link_key: cropKey, image_url: pub.publicUrl, storage_path: path }, { onConflict: "link_key" });
       if (dbErr) throw dbErr;
       toast.success("Background updated");
-      setImages((m) => ({ ...m, [key]: pub.publicUrl }));
+      setImages((m) => ({ ...m, [cropKey!]: pub.publicUrl }));
     } catch (err: any) {
       toast.error(err?.message ?? "Upload failed");
     } finally {
       setUploading(null);
+      setCropKey(null);
+      setCropSrc(null);
     }
   };
 
@@ -146,9 +199,39 @@ function Links() {
       </section>
       {isAdmin && (
         <p className="px-4 mt-3 text-xs text-muted-foreground">
-          Tap "Add photo" / "Change" on any card to set its background. 3:2 images look best.
+          Tap "Add photo" / "Change" on any card to upload and crop the background. Frames use a 3:2 ratio.
         </p>
       )}
+
+      <Dialog open={cropOpen} onOpenChange={(o) => { if (!o) { setCropOpen(false); setCropSrc(null); setCropKey(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><CropIcon className="h-4 w-4" /> Crop background (3:2)</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full h-72 bg-black rounded-md overflow-hidden">
+            {cropSrc && (
+              <Cropper
+                image={cropSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={ASPECT}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                objectFit="contain"
+              />
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Zoom</label>
+            <Slider value={[zoom]} min={1} max={4} step={0.01} onValueChange={(v) => setZoom(v[0])} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCropOpen(false)}>Cancel</Button>
+            <Button onClick={confirmCrop} disabled={!croppedArea}>Save background</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
