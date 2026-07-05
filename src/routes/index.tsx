@@ -127,30 +127,35 @@ function Dashboard() {
       {/* 2x2 grid summary cards */}
       <section className="px-4 mt-4 grid grid-cols-2 gap-3">
         <SummaryCard
+          to="/activities"
           icon={CheckSquare}
           label="Events Attended"
           value={String(totalAttended)}
           sub={`${attendance.length} active members`}
         />
         <SummaryCard
+          to="/more"
           icon={Quote}
           label="Quote of the Week"
           value={quote ? quote.scholar_name : "—"}
           sub={quote ? "Tap to read" : "Not set"}
         />
         <SummaryCard
+          to="/activities"
           icon={CalendarDays}
           label="Upcoming Events"
           value={String(upcoming.length)}
           sub="Next 5 scheduled"
         />
         <SummaryCard
+          to="/more"
           icon={Trophy}
           label="Scholar of the Month"
           value={recognition ? recognition.scholar_name : "—"}
           sub={recognition?.recognition_type ?? "Not set"}
         />
       </section>
+
 
       {/* Events Attended */}
       <Section icon={CheckSquare} title="Events Attended">
