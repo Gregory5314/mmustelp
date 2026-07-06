@@ -1,10 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PermissionGate } from "@/components/AppLayout";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, Crop as CropIcon } from "lucide-react";
+import Cropper, { type Area } from "react-easy-crop";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 
 export const Route = createFileRoute("/admin/chapter")({
   head: () => ({ meta: [{ title: "Chapter Profile — MMUST ELP" }] }),
@@ -14,6 +18,24 @@ export const Route = createFileRoute("/admin/chapter")({
     </PermissionGate>
   ),
 });
+
+async function getCroppedBlob(imageSrc: string, crop: Area, mime: string): Promise<Blob> {
+  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const i = new Image();
+    i.crossOrigin = "anonymous";
+    i.onload = () => resolve(i);
+    i.onerror = reject;
+    i.src = imageSrc;
+  });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(crop.width);
+  canvas.height = Math.round(crop.height);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(img, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Crop failed"))), mime, 0.95),
+  );
+}
 
 function Page() {
   const [id, setId] = useState<string | null>(null);
@@ -27,6 +49,14 @@ function Page() {
   });
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const [cropOpen, setCropOpen] = useState(false);
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropMime, setCropMime] = useState("image/png");
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedArea, setCroppedArea] = useState<Area | null>(null);
+  const onCropComplete = useCallback((_: Area, px: Area) => setCroppedArea(px), []);
 
   const load = () =>
     supabase.rpc("get_chapter_admin").then(({ data }) => {
@@ -62,28 +92,50 @@ function Page() {
     toast.success("Chapter profile updated.");
   };
 
-  const uploadLogo = async (file: File) => {
-    if (!id) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) return toast.error("Please choose an image");
+    if (f.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSrc(reader.result as string);
+      setCropMime(f.type);
+      setCrop({ x: 0, y: 0 });
+      setZoom(1);
+      setCroppedArea(null);
+      setCropOpen(true);
+    };
+    reader.readAsDataURL(f);
+  };
+
+  const confirmCrop = async () => {
+    if (!id || !cropSrc || !croppedArea) return;
     setUploading(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "png";
-    const path = `chapter/logo-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (upErr) {
+    setCropOpen(false);
+    try {
+      const blob = await getCroppedBlob(cropSrc, croppedArea, cropMime);
+      const ext = (cropMime.split("/")[1] || "png").replace("jpeg", "jpg");
+      const path = `chapter/logo-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, blob, { contentType: cropMime, cacheControl: "31536000" });
+      if (upErr) throw upErr;
+      const publicUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+      const { error } = await supabase
+        .from("chapter_profile")
+        .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+      setLogoUrl(publicUrl);
+      toast.success("Chapter logo updated.");
+    } catch (err: any) {
+      toast.error(err?.message ?? "Upload failed");
+    } finally {
       setUploading(false);
-      return toast.error(upErr.message);
+      setCropSrc(null);
     }
-    const publicUrl = supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
-    const { error } = await supabase
-      .from("chapter_profile")
-      .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    setUploading(false);
-    if (error) return toast.error(error.message);
-    setLogoUrl(publicUrl);
-    toast.success("Chapter logo updated.");
   };
 
   return (
@@ -100,16 +152,13 @@ function Page() {
           </div>
           <div className="flex-1">
             <p className="text-sm font-extrabold text-[var(--brand)]">Chapter Logo</p>
-            <p className="text-xs text-muted-foreground mb-2">Upload a new logo (PNG/JPG, max 5MB)</p>
+            <p className="text-xs text-muted-foreground mb-2">Upload & crop a logo (PNG/JPG, max 5MB)</p>
             <input
               ref={fileRef}
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) uploadLogo(f);
-              }}
+              onChange={onFile}
             />
             <button
               type="button"
@@ -164,6 +213,38 @@ function Page() {
           </button>
         </form>
       </section>
+
+      <Dialog open={cropOpen} onOpenChange={(o) => { if (!o) { setCropOpen(false); setCropSrc(null); } }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><CropIcon className="h-4 w-4" /> Crop logo (1:1)</DialogTitle>
+          </DialogHeader>
+          <div className="relative w-full h-72 bg-black rounded-md overflow-hidden">
+            {cropSrc && (
+              <Cropper
+                image={cropSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={onCropComplete}
+                objectFit="contain"
+              />
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-medium text-muted-foreground">Zoom</label>
+            <Slider value={[zoom]} min={1} max={4} step={0.01} onValueChange={(v) => setZoom(v[0])} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCropOpen(false)}>Cancel</Button>
+            <Button onClick={confirmCrop} disabled={!croppedArea}>Save logo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

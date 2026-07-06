@@ -109,7 +109,7 @@ function Links() {
       const ext = (cropMime.split("/")[1] || "jpg").replace("jpeg", "jpg");
       const path = `links/${cropKey}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage.from(BUCKET).upload(path, blob, {
-        cacheControl: "31536000", upsert: true, contentType: cropMime,
+        cacheControl: "31536000", contentType: cropMime,
       });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from(BUCKET).getPublicUrl(path);
