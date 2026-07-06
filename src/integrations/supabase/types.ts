@@ -253,44 +253,143 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_albums: {
+        Row: {
+          created_at: string
+          id: string
+          title: string
+          uploader_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          title: string
+          uploader_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          title?: string
+          uploader_id?: string
+        }
+        Relationships: []
+      }
+      gallery_comments: {
+        Row: {
+          album_id: string
+          body: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          body: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_comments_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gallery_photos: {
         Row: {
+          album_id: string | null
           caption: string | null
           content_type: string | null
           created_at: string
           file_name: string | null
           id: string
+          position: number
           public_url: string
           size_bytes: number | null
           storage_path: string
           taken_at: string
+          title: string | null
           uploader_id: string
         }
         Insert: {
+          album_id?: string | null
           caption?: string | null
           content_type?: string | null
           created_at?: string
           file_name?: string | null
           id?: string
+          position?: number
           public_url: string
           size_bytes?: number | null
           storage_path: string
           taken_at?: string
+          title?: string | null
           uploader_id: string
         }
         Update: {
+          album_id?: string | null
           caption?: string | null
           content_type?: string | null
           created_at?: string
           file_name?: string | null
           id?: string
+          position?: number
           public_url?: string
           size_bytes?: number | null
           storage_path?: string
           taken_at?: string
+          title?: string | null
           uploader_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gallery_photos_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gallery_reactions: {
+        Row: {
+          album_id: string
+          created_at: string
+          emoji: string
+          user_id: string
+        }
+        Insert: {
+          album_id: string
+          created_at?: string
+          emoji?: string
+          user_id: string
+        }
+        Update: {
+          album_id?: string
+          created_at?: string
+          emoji?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gallery_reactions_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "gallery_albums"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       link_images: {
         Row: {
