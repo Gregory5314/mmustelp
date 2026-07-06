@@ -675,7 +675,7 @@ function Lightbox({
         </div>
 
         {showComments && (
-          <aside className="w-full max-w-sm bg-neutral-900 text-white border-l border-white/10 flex flex-col hidden sm:flex">
+          <aside className="w-full max-w-sm bg-neutral-900 text-white border-l border-white/10 hidden sm:flex sm:flex-col">
             <CommentsPanel
               comments={comments} commentText={commentText} setCommentText={setCommentText}
               submitComment={submitComment} commentBusy={commentBusy}
